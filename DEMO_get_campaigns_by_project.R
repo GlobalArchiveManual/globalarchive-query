@@ -1,10 +1,44 @@
 library(httr)
 library(jsonlite)
 library(RCurl)
+library(dplyr)
+library(purrr)
+library(readr)
+library(tidyr)
+library(stringr)
 
 ### Source functions----
 galib <- getURL("https://raw.githubusercontent.com/UWAMEGFisheries/globalarchive-api/master/R/galib.R", ssl.verifypeer = FALSE)
 eval(parse(text = galib))
+
+# Clean names function ----
+clean_names <- function(dat){
+  old_names <- names(dat)
+  new_names <- old_names %>%
+    gsub("%", "percent", .) %>%
+    make.names(.) %>%
+    gsub("[.]+", ".", .) %>%
+    tolower(.) %>%
+    gsub("_$", "", .)
+  setNames(dat, new_names)
+}
+
+## Function that reads in csv files and creates a column for filepath to get CampaignID ----
+read_files_csv <- function(flnm) {
+  read_csv(flnm,col_types = cols(.default = "c"))%>% 
+    mutate(campaignnames = flnm)%>%
+    separate(campaignnames,into=c("Folder","Synthesis","Project","CampaignID","File"),sep="/")%>%
+    select(-c(Folder,Synthesis,File))%>%
+    clean_names
+}
+## Function that reads in txt files and creates a column for filepath to get CampaignID ----
+read_files_txt <- function(flnm) {
+  read_tsv(flnm,col_types = cols(.default = "c"))%>% 
+    mutate(campaignnames = flnm)%>%
+    separate(campaignnames,into=c("Folder","Synthesis","Project","CampaignID","File"),sep="/")%>%
+    select(-c(Folder,Synthesis,File))%>%
+    clean_names
+}
 
 ### Setup your query ----
 API_USER_TOKEN <- "ef231f61b4ef204d39f47f58cccadf71af250a365e314e83dbcb3b08"  # Change to demonstration user when receive it from ari
@@ -41,8 +75,19 @@ process_campaign_object <- function(object) {
 ### Run the query and process the campaigns ----
 nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
 
+# The files are now downloaded into the folder selected on line 18 ----
 
+## Bring in metadata files ----
+metadata <-
+  list.files(path="Data",
+             recursive=T,
+             pattern="Metadata.csv",
+             full.names=T) %>% 
+  map_df(~read_files_csv(.))%>%
+  select(campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>%
+  glimpse()
 
+names(metadata)
 
 
 
