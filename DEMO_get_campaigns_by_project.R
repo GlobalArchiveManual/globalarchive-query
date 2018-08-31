@@ -62,9 +62,11 @@ metadata <-list.files(path=download.dir,
              pattern="Metadata.csv",
              full.names=T) %>% 
   map_df(~read_files_csv(.))%>%
-  dplyr::select(campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>%
+  dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>%
   left_join(info)%>% # Join in annotation info
   glimpse()
+
+name<-as.character(unique(metadata$project))
 
 ## Points files ----
 points <-list.files(path=download.dir,
@@ -118,5 +120,7 @@ length3dpoints<-lengths%>%
   filter(successful.length=="Yes")%>%
   glimpse()
 
-
-
+## Save maxn and length files ----
+setwd(tidy.dir)
+write.csv(maxn,paste(name,"maxn.csv",sep="_"),row.names = FALSE)
+write.csv(length3dpoints,paste(name,"length3dpoints.csv",sep="_"),row.names = FALSE)
