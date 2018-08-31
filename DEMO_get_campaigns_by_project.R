@@ -15,39 +15,6 @@ eval(parse(text = galib))
 functions <-getURL("https://raw.githubusercontent.com/GlobalArchiveManual/globalarchive-query/master/Functions.R", ssl.verifypeer = FALSE)
 eval(parse(text = functions))
 
-
-# # Clean names function ----
-# #TJL - this could be loaded from a repo as function above?
-# clean_names <- function(dat){
-#   old_names <- names(dat)
-#   new_names <- old_names %>%
-#     gsub("%", "percent", .) %>%
-#     make.names(.) %>%
-#     gsub("[.]+", ".", .) %>%
-#     tolower(.) %>%
-#     gsub("_$", "", .)
-#   setNames(dat, new_names)
-# }
-# 
-# ## Function that reads in csv files and creates a column for filepath to get CampaignID ----
-# #TJL - this could be loaded from a repo as function above?
-# read_files_csv <- function(flnm) {
-#   read_csv(flnm,col_types = cols(.default = "c"))%>% 
-#     mutate(campaignnames = flnm)%>%
-#     separate(campaignnames,into=c("Folder","Project","CampaignID","File"),sep="/")%>% #"Synthesis",
-#     select(-c(Folder,File))%>% #Synthesis,
-#     clean_names
-# }
-# ## Function that reads in txt files and creates a column for filepath to get CampaignID ----
-# #TJL - this could be loaded from a repo as function above?
-# read_files_txt <- function(flnm) {
-#   read_tsv(flnm,col_types = cols(.default = "c"))%>% 
-#     mutate(campaignnames = flnm)%>%
-#     separate(campaignnames,into=c("Folder","Project","CampaignID","File"),sep="/")%>% #"Synthesis",
-#     select(-c(Folder,File))%>%#Synthesis,
-#     clean_names
-# }
-
 ### Setup your query ----
 API_USER_TOKEN <- "ef231f61b4ef204d39f47f58cccadf71af250a365e314e83dbcb3b08"  # Change to demonstration user when receive it from ari
 
@@ -59,22 +26,6 @@ MATCH_FILES <- ".csv$|.txt$"
 
 # API search by Project (space replaced with +) ----
 q='{"filters":[{"name":"project","op":"has","val":{"name":"name","op":"eq","val":"Pilbara+Marine+Conservation+Partnership"}}]}'
-
-# ### Return campaign objects ----
-# #TJL - this could be loaded from a repo as function above?
-# process_campaign_object <- function(object) {
-#   # Perform another request to the API to get more detailed campaign info
-#   campaign <- ga.get.campaign(API_USER_TOKEN, object["id"])
-#   #print(toJSON(campaign, pretty=TRUE))  # show all avialable info
-#   # Print campaign_info to console
-#   ga.print.campaign_details(campaign)  # prints details about campaign
-#   # Download/save campaign files and data
-#   campaign_path <- file.path(DATA_DIR, campaign$project["name"], campaign$name) # create campaign path
-#   dir.create(campaign_path, showWarnings = FALSE, recursive=TRUE)             # create campaign dir
-#   campaign_files = ga.download.campaign_files(API_USER_TOKEN, campaign$files, campaign_path, match=MATCH_FILES)   # download all campaign files
-#   ga.download.campaign_info(API_USER_TOKEN, campaign$info, campaign_path)     # generate csv file for info
-#   ga.download.campaign_record(API_USER_TOKEN, campaign, campaign_path)        # generate json file containing campaign record information
-# }
 
 ### Run the query and process the campaigns ----
 nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)

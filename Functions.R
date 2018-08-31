@@ -1,5 +1,4 @@
 # Clean names function ----
-#TJL - this could be loaded from a repo as function above?
 clean_names <- function(dat){
   old_names <- names(dat)
   new_names <- old_names %>%
@@ -12,26 +11,23 @@ clean_names <- function(dat){
 }
 
 ## Function that reads in csv files and creates a column for filepath to get CampaignID ----
-#TJL - this could be loaded from a repo as function above?
 read_files_csv <- function(flnm) {
   read_csv(flnm,col_types = cols(.default = "c"))%>% 
-    mutate(campaignnames = flnm)%>%
-    separate(campaignnames,into=c("Folder","Project","CampaignID","File"),sep="/")%>% #"Synthesis",
-    select(-c(Folder,File))%>% #Synthesis,
+    mutate(campaign.naming = flnm)%>%
+    #separate(campaign.naming,into=c("Folder","Project","CampaignID","File"),sep="/")%>% #"Synthesis",
+    #select(-c(Folder,File))%>% #Synthesis,
     clean_names
 }
 ## Function that reads in txt files and creates a column for filepath to get CampaignID ----
-#TJL - this could be loaded from a repo as function above?
 read_files_txt <- function(flnm) {
   read_tsv(flnm,col_types = cols(.default = "c"))%>% 
-    mutate(campaignnames = flnm)%>%
-    separate(campaignnames,into=c("Folder","Project","CampaignID","File"),sep="/")%>% #"Synthesis",
-    select(-c(Folder,File))%>%#Synthesis,
+    mutate(campaign.naming = flnm)%>%
+    #separate(campaign.naming,into=c("Folder","Project","CampaignID","File"),sep="/")%>% #"Synthesis",
+    #select(-c(Folder,File))%>%#Synthesis,
     clean_names
 }
 
 ### Return campaign objects ----
-#TJL - this could be loaded from a repo as function above?
 process_campaign_object <- function(object) {
   # Perform another request to the API to get more detailed campaign info
   campaign <- ga.get.campaign(API_USER_TOKEN, object["id"])
