@@ -21,7 +21,7 @@ eval(parse(text = functions))
 API_USER_TOKEN <- "ef231f61b4ef204d39f47f58cccadf71af250a365e314e83dbcb3b08"  # Change to demo user when received
 
 # This is the location where the downloaded data will sit ----
-DATA_DIR <- "Data"
+DATA_DIR <- "ProjectQuery"
 
 # Configure search pattern for downloading all files ----
 MATCH_FILES <- ".csv$|.txt$"
@@ -33,7 +33,7 @@ q='{"filters":[{"name":"project","op":"has","val":{"name":"name","op":"eq","val"
 nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
 
 ## Annotation info ----
-info<-list.files(path="Data",
+info<-list.files(path="ProjectQuery",
                  recursive=T,
                  pattern="_info.csv",
                  full.names=T) %>% 
@@ -43,7 +43,7 @@ info<-list.files(path="Data",
   tidyr::spread(name,value)
 
 ## Metadata files ----
-metadata <-list.files(path="Data",
+metadata <-list.files(path="ProjectQuery",
              recursive=T,
              pattern="Metadata.csv",
              full.names=T) %>% 
@@ -54,7 +54,7 @@ metadata <-list.files(path="Data",
   glimpse()
 
 ## Points files ----
-points <-list.files(path="Data",
+points <-list.files(path="ProjectQuery",
              recursive=T,
              pattern="_Points.txt",
              full.names=T) %>% 
@@ -65,7 +65,7 @@ points <-list.files(path="Data",
   glimpse()
 
 ## 3D Points files ----
-threedpoints <-list.files(path="Data",
+threedpoints <-list.files(path="ProjectQuery",
              recursive=T,
              pattern="3DPoints.txt",
              full.names=T) %>%
@@ -76,7 +76,7 @@ threedpoints <-list.files(path="Data",
   glimpse()
 
 ## Lengths files ----
-lengths <-list.files(path="Data",
+lengths <-list.files(path="ProjectQuery",
              recursive=T,
              pattern="Lengths.txt",
              full.names=T) %>% 
