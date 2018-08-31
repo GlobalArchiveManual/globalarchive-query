@@ -17,15 +17,19 @@ eval(parse(text = galib))
 functions <-getURL("https://raw.githubusercontent.com/GlobalArchiveManual/globalarchive-query/master/Functions.R", ssl.verifypeer = FALSE)
 eval(parse(text = functions))
 
+### Set your working directory ----
+working.dir<-("C:/GitHub/globalarchive-query")
+setwd(working.dir)
+
+## Create a folder for downloaded data and tidy data ----
+dir.create(file.path(working.dir, "Downloads"), showWarnings = TRUE) # Will warn if directory already exist
+dir.create(file.path(working.dir, "Tidy data"), showWarnings = TRUE) # Will warn if directory already exist
+
+## Save directory names ----
+download.dir<-paste(working.dir,"Downloads",sep="/")
+tidy.dir<-paste(working.dir,"Tidy data",sep="/")
+
 ### Setup your query ----
-API_USER_TOKEN <- "ef231f61b4ef204d39f47f58cccadf71af250a365e314e83dbcb3b08"  # Change to demo user when received
-
-# This is the location where the downloaded data will sit ----
-DATA_DIR <- "ProjectQuery"
-
-# Configure search pattern for downloading all files ----
-MATCH_FILES <- ".csv$|.txt$"
-
 # API search by Project (space replaced with +) ----
 q='{"filters":[{"name":"project","op":"has","val":{"name":"name","op":"eq","val":"Pilbara+Marine+Conservation+Partnership"}}]}'
 

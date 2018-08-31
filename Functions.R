@@ -1,3 +1,12 @@
+# API
+API_USER_TOKEN <- "ef231f61b4ef204d39f47f58cccadf71af250a365e314e83dbcb3b08"  # Change to demo user when received
+
+# This is the location where the downloaded data will sit ----
+DATA_DIR <- download.dir
+
+# Configure search pattern for downloading all files ----
+MATCH_FILES <- ".csv$|.txt$"
+
 # Clean names function ----
 clean_names <- function(dat){
   old_names <- names(dat)
