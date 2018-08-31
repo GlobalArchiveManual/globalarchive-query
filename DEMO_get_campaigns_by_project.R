@@ -130,12 +130,16 @@ maxn<-points%>%
   ungroup()%>%
   filter(!is.na(maxn))%>%
   filter(!maxn==0)%>%
+  inner_join(metadata)%>%
+  filter(successful.count=="Yes")%>%
   glimpse()
 
 length3dpoints<-lengths%>%
   plyr::rbind.fill(threedpoints)%>%
   dplyr::mutate(length=as.numeric(length))%>%
   dplyr::mutate(number=as.numeric(number))%>%
+  inner_join(metadata)%>%
+  filter(successful.length=="Yes")%>%
   glimpse()
 
 
