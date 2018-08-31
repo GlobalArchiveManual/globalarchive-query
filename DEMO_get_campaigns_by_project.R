@@ -12,6 +12,10 @@ library(plyr)
 galib <- getURL("https://raw.githubusercontent.com/UWAMEGFisheries/globalarchive-api/master/R/galib.R", ssl.verifypeer = FALSE)
 eval(parse(text = galib))
 
+functions <-getURL("https://raw.githubusercontent.com/GlobalArchiveManual/globalarchive-query/master/Functions.R", ssl.verifypeer = FALSE)
+eval(parse(text = functions))
+
+
 # # Clean names function ----
 # #TJL - this could be loaded from a repo as function above?
 # clean_names <- function(dat){
