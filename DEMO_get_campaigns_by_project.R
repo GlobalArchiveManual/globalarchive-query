@@ -45,12 +45,6 @@ read_files_txt <- function(flnm) {
 
 ### Setup your query ----
 API_USER_TOKEN <- "ef231f61b4ef204d39f47f58cccadf71af250a365e314e83dbcb3b08"  # Change to demonstration user when receive it from ari
-#TJL - this could be removed??
-if (!exists("API_USER_TOKEN")) {
-  args = commandArgs(trailingOnly=TRUE)
-  if (length(args)==0) {stop("Not API_USER_TOKEN found. Either set it in the code or pass it as an argument to the script!")}
-  else {API_USER_TOKEN <- args[1]}   # get it from command line argument
-}
 
 # This is the location where the downloaded data will sit ----
 DATA_DIR <- "Data"
