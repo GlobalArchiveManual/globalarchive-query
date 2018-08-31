@@ -6,6 +6,7 @@ library(purrr)
 library(readr)
 library(tidyr)
 library(stringr)
+library(plyr)
 
 ### Source functions----
 galib <- getURL("https://raw.githubusercontent.com/UWAMEGFisheries/globalarchive-api/master/R/galib.R", ssl.verifypeer = FALSE)
@@ -29,8 +30,8 @@ clean_names <- function(dat){
 read_files_csv <- function(flnm) {
   read_csv(flnm,col_types = cols(.default = "c"))%>% 
     mutate(campaignnames = flnm)%>%
-    separate(campaignnames,into=c("Folder","Synthesis","Project","CampaignID","File"),sep="/")%>%
-    select(-c(Folder,Synthesis,File))%>%
+    separate(campaignnames,into=c("Folder","Project","CampaignID","File"),sep="/")%>% #"Synthesis",
+    select(-c(Folder,File))%>% #Synthesis,
     clean_names
 }
 ## Function that reads in txt files and creates a column for filepath to get CampaignID ----
@@ -38,8 +39,8 @@ read_files_csv <- function(flnm) {
 read_files_txt <- function(flnm) {
   read_tsv(flnm,col_types = cols(.default = "c"))%>% 
     mutate(campaignnames = flnm)%>%
-    separate(campaignnames,into=c("Folder","Synthesis","Project","CampaignID","File"),sep="/")%>%
-    select(-c(Folder,Synthesis,File))%>%
+    separate(campaignnames,into=c("Folder","Project","CampaignID","File"),sep="/")%>% #"Synthesis",
+    select(-c(Folder,File))%>%#Synthesis,
     clean_names
 }
 
@@ -73,25 +74,69 @@ process_campaign_object <- function(object) {
 
 ### Run the query and process the campaigns ----
 nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
+# The files are now downloaded into the folder selected above----
 
-# The files are now downloaded into the folder selected on line 18 ----
-
-## Bring in metadata files ----
+## Metadata files ----
 metadata <-
   list.files(path="Data",
              recursive=T,
              pattern="Metadata.csv",
              full.names=T) %>% 
   map_df(~read_files_csv(.))%>%
-  select(campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>%
+  dplyr::select(campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>%
   glimpse()
 
-names(metadata)
+## Points files ----
+points <-
+  list.files(path="Data",
+             recursive=T,
+             pattern="_Points.txt",
+             full.names=T) %>% 
+  map_df(~read_files_txt(.))%>%
+  dplyr::rename(sample=opcode)%>%
+  dplyr::select(campaignid,sample,family,genus,species,number,frame)%>%
+  glimpse()
 
+## 3D Points files ----
+threedpoints <-
+  list.files(path="Data",
+             recursive=T,
+             pattern="3DPoints.txt",
+             full.names=T) %>%
+  map_df(~read_files_txt(.))%>%
+  dplyr::rename(sample=opcode)%>%
+  dplyr::select(campaignid,sample,family,genus,species,range,number,comment)%>%
+  glimpse()
 
+## Lengths files ----
+lengths <-
+  list.files(path="Data",
+             recursive=T,
+             pattern="Lengths.txt",
+             full.names=T) %>% 
+  map_df(~read_files_txt(.))%>%
+  dplyr::rename(sample=opcode)%>%
+  dplyr::select(campaignid,sample,family,genus,species,length,range,number,comment)%>%
+  glimpse()
 
+## Make Maxn and length dataframes----
 
+maxn<-points%>%
+  group_by(campaignid,sample,frame,family,genus,species)%>%
+  dplyr::mutate(number=as.numeric(number))%>%
+  dplyr::summarise(maxn=sum(number))%>%
+  dplyr::group_by(campaignid,sample,family,genus,species)%>%
+  slice(which.max(maxn))%>%
+  ungroup()%>%
+  filter(!is.na(maxn))%>%
+  filter(!maxn==0)%>%
+  glimpse()
 
+length3dpoints<-lengths%>%
+  plyr::rbind.fill(threedpoints)%>%
+  dplyr::mutate(length=as.numeric(length))%>%
+  dplyr::mutate(number=as.numeric(number))%>%
+  glimpse()
 
 
 
