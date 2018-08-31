@@ -26,8 +26,8 @@ DATA_DIR <- "Data"
 # Configure search pattern for downloading all files ----
 MATCH_FILES <- ".csv$|.txt$"
 
-# API search by Project (space replaced with +) ----
-q='{"filters":[{"name":"project","op":"has","val":{"name":"name","op":"eq","val":"Pilbara+Marine+Conservation+Partnership"}}]}'
+# API search by CampaignID (space replaced with +) ----
+q='{"filters":[{"name":"name","op":"eq","val":"2011-09_Barrow.PDS_stereoBRUVs"}]}'
 
 ### Run the query and process the campaigns. Files will be downloaded into DATA_DIR ----
 nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
@@ -44,9 +44,9 @@ info<-list.files(path="Data",
 
 ## Metadata files ----
 metadata <-list.files(path="Data",
-             recursive=T,
-             pattern="Metadata.csv",
-             full.names=T) %>% 
+                      recursive=T,
+                      pattern="Metadata.csv",
+                      full.names=T) %>% 
   map_df(~read_files_csv(.))%>%
   tidyr::separate(campaign.naming,into=c("folder","project","campaignid","file"),sep="/")%>%
   dplyr::select(campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>%
@@ -55,9 +55,9 @@ metadata <-list.files(path="Data",
 
 ## Points files ----
 points <-list.files(path="Data",
-             recursive=T,
-             pattern="_Points.txt",
-             full.names=T) %>% 
+                    recursive=T,
+                    pattern="_Points.txt",
+                    full.names=T) %>% 
   map_df(~read_files_txt(.))%>%
   tidyr::separate(campaign.naming,into=c("folder","project","campaignid","file"),sep="/")%>%
   dplyr::rename(sample=opcode)%>%
@@ -66,9 +66,9 @@ points <-list.files(path="Data",
 
 ## 3D Points files ----
 threedpoints <-list.files(path="Data",
-             recursive=T,
-             pattern="3DPoints.txt",
-             full.names=T) %>%
+                          recursive=T,
+                          pattern="3DPoints.txt",
+                          full.names=T) %>%
   map_df(~read_files_txt(.))%>%
   tidyr::separate(campaign.naming,into=c("folder","project","campaignid","file"),sep="/")%>%
   dplyr::rename(sample=opcode)%>%
@@ -77,9 +77,9 @@ threedpoints <-list.files(path="Data",
 
 ## Lengths files ----
 lengths <-list.files(path="Data",
-             recursive=T,
-             pattern="Lengths.txt",
-             full.names=T) %>% 
+                     recursive=T,
+                     pattern="Lengths.txt",
+                     full.names=T) %>% 
   map_df(~read_files_txt(.))%>%
   tidyr::separate(campaign.naming,into=c("folder","project","campaignid","file"),sep="/")%>%
   dplyr::rename(sample=opcode)%>%
