@@ -20,9 +20,8 @@ read_files_csv <- function(flnm) {
 ## Function that reads in txt files and creates a column for filepath to get CampaignID ----
 read_files_txt <- function(flnm) {
   read_tsv(flnm,col_types = cols(.default = "c"))%>% 
-    mutate(campaign.naming = flnm)%>%
-    #separate(campaign.naming,into=c("Folder","Project","CampaignID","File"),sep="/")%>% #"Synthesis",
-    #select(-c(Folder,File))%>%#Synthesis,
+    mutate(campaign.naming=str_replace_all(flnm,paste(download.dir,"/",sep=""),""))%>%
+    tidyr::separate(campaign.naming,into=c("project","campaignid"),sep="/",remove=TRUE)%>%
     clean_names
 }
 

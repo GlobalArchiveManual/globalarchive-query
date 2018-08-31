@@ -18,18 +18,29 @@ functions <-getURL("https://raw.githubusercontent.com/GlobalArchiveManual/global
 eval(parse(text = functions))
 
 ### Set your working directory ----
-working.dir<-("C:/GitHub/globalarchive-query")
+working.dir<-("C:/GitHub/globalarchive-query") # This is the only folder you will need to create outside of R
 setwd(working.dir)
-
-## Create a folder for downloaded data and tidy data ----
-dir.create(file.path(working.dir, "Downloads"), showWarnings = TRUE) # Will warn if directory already exist
-dir.create(file.path(working.dir, "Tidy data"), showWarnings = TRUE) # Will warn if directory already exist
 
 ## Save directory names ----
 download.dir<-paste(working.dir,"Downloads",sep="/")
 tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 
+unlink(download.dir, recursive=TRUE) # Clear downloads folder (this will delete everything in the downloads folder (very scary))
+
+## Create a folder for downloaded data and tidy data ----
+dir.create(file.path(working.dir, "Downloads"))
+dir.create(file.path(working.dir, "Tidy data"))
+
 ### Setup your query ----
+# API
+API_USER_TOKEN <- "ef231f61b4ef204d39f47f58cccadf71af250a365e314e83dbcb3b08"  # Change to demo user when received
+
+# This is the location where the downloaded data will sit ----
+DATA_DIR <- download.dir
+
+# Configure search pattern for downloading all files ----
+MATCH_FILES <- ".csv$|.txt$"
+
 # API search by Project (space replaced with +) ----
 q='{"filters":[{"name":"project","op":"has","val":{"name":"name","op":"eq","val":"Pilbara+Marine+Conservation+Partnership"}}]}'
 
@@ -37,55 +48,50 @@ q='{"filters":[{"name":"project","op":"has","val":{"name":"name","op":"eq","val"
 nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
 
 ## Annotation info ----
-info<-list.files(path="ProjectQuery",
+info<-list.files(path=download.dir,
                  recursive=T,
                  pattern="_info.csv",
                  full.names=T) %>% 
   map_df(~read_files_csv(.))%>%
-  tidyr::separate(campaign.naming,into=c("folder","project","campaignid","file"),sep="/")%>%
   select(campaignid,name,value)%>%
   tidyr::spread(name,value)
 
 ## Metadata files ----
-metadata <-list.files(path="ProjectQuery",
+metadata <-list.files(path=download.dir,
              recursive=T,
              pattern="Metadata.csv",
              full.names=T) %>% 
   map_df(~read_files_csv(.))%>%
-  tidyr::separate(campaign.naming,into=c("folder","project","campaignid","file"),sep="/")%>%
   dplyr::select(campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>%
   left_join(info)%>% # Join in annotation info
   glimpse()
 
 ## Points files ----
-points <-list.files(path="ProjectQuery",
+points <-list.files(path=download.dir,
              recursive=T,
              pattern="_Points.txt",
              full.names=T) %>% 
   map_df(~read_files_txt(.))%>%
-  tidyr::separate(campaign.naming,into=c("folder","project","campaignid","file"),sep="/")%>%
   dplyr::rename(sample=opcode)%>%
   dplyr::select(campaignid,sample,family,genus,species,number,frame)%>%
   glimpse()
 
 ## 3D Points files ----
-threedpoints <-list.files(path="ProjectQuery",
+threedpoints <-list.files(path=download.dir,
              recursive=T,
              pattern="3DPoints.txt",
              full.names=T) %>%
   map_df(~read_files_txt(.))%>%
-  tidyr::separate(campaign.naming,into=c("folder","project","campaignid","file"),sep="/")%>%
   dplyr::rename(sample=opcode)%>%
   dplyr::select(campaignid,sample,family,genus,species,range,number,comment)%>%
   glimpse()
 
 ## Lengths files ----
-lengths <-list.files(path="ProjectQuery",
+lengths <-list.files(path=download.dir,
              recursive=T,
              pattern="Lengths.txt",
              full.names=T) %>% 
   map_df(~read_files_txt(.))%>%
-  tidyr::separate(campaign.naming,into=c("folder","project","campaignid","file"),sep="/")%>%
   dplyr::rename(sample=opcode)%>%
   dplyr::select(campaignid,sample,family,genus,species,length,range,number,comment)%>%
   glimpse()
