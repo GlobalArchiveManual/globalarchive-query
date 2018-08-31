@@ -14,7 +14,7 @@ clean_names <- function(dat){
 read_files_csv <- function(flnm) {
   read_csv(flnm,col_types = cols(.default = "c"))%>%
     mutate(campaign.naming=str_replace_all(flnm,paste(download.dir,"/",sep=""),""))%>%
-    tidyr::separate(campaign.naming,into=c("project","campaignid"),sep="/"),remove=TRUE%>%
+    tidyr::separate(campaign.naming,into=c("project","campaignid"),sep="/",remove=TRUE)%>%
     clean_names
 }
 ## Function that reads in txt files and creates a column for filepath to get CampaignID ----
