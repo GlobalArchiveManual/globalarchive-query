@@ -1,4 +1,4 @@
-# globalarchive-query
+# Download data using GlobalArchive query
 This repository holds two scripts which demonstrate how to download data from GlobalArchive by <i>"Workgroup"</i> and by <i>"Project"</i>.
 
 NOTE: The <i>get_campaigns_by_project</i> example only uses campaigns that have been analysed using EventMeasure whereas the <i>get_campaigns_by_workgroup</i> example includes both EventMeasure and generic data.
