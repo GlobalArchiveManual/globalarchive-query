@@ -3,7 +3,7 @@ This repository holds two scripts which demonstrate how to download data from Gl
 
 ### Set your working directory
 Before running the script create the main folder where you will be working out of. You can do this in File Explorer or in the Files Pane in RStudio.
-The script will then create two subdirectories. The first is a <i>"Downloads"</i> folder, where all files downloaded from GlobalArchive will sit. The second is a <i>"Tidy data"</i> folder, where the final .csvs will be saved once all the data has een combined.
+The script will then create two subdirectories. The first is a <i>"Downloads"</i> folder, where all files downloaded from GlobalArchive will sit. The second is a <i>"Tidy data"</i> folder, where the final .csv files will be saved once all the data has een combined.
 
 The script will also delete any files that are already in your <i>"Downloads"</i> folder (if you have used this working directory before). To ensure that only the most recent files are downloaded. The API function can not change any files that have been altered on GlobalArchive, it can only replace files with the same name.
 
