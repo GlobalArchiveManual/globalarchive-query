@@ -1,11 +1,11 @@
 # globalarchive-query
 This repository holds two scripts which demonstrate how to download data from GlobalArchive by <i>"Workgroup"</i> and by <i>"Project"</i>.
 
-NOTE: The <i>get_campaigns_by_project</i> example only uses campaigns that have been analysed using EventMeasure where as the <i>get_campaigns_by_workgroup</i> example includes both EventMeasure and generic data.
+NOTE: The <i>get_campaigns_by_project</i> example only uses campaigns that have been analysed using EventMeasure whereas the <i>get_campaigns_by_workgroup</i> example includes both EventMeasure and generic data.
 
 ### Set your working directory
 Before running the script create the main folder where you will be working out of. You can do this in File Explorer or in the Files Pane in RStudio.
-The script will then create two subdirectories. The first is a <i>"Downloads"</i> folder, where all files downloaded from GlobalArchive will sit. The second is a <i>"Tidy data"</i> folder, where the final .csv files will be saved once all the data has een combined.
+The script will then create two subdirectories. The first is a <i>"Downloads"</i> folder, where all files downloaded from GlobalArchive will sit. The second is a <i>"Tidy data"</i> folder, where the final .csv files will be saved once all the data has been combined.
 
 <b>The script will also delete any files that are already in your <i>"Downloads"</i> folder if you have used this working directory before. This is to ensure that only the most recent files are downloaded. Do not use this folder to save anything other than the downloaded files from GlobalArchive to avoid losing data. Data deleted using the unlink() function is unrecoverable!</b>
 
@@ -30,7 +30,7 @@ q='{"filters":[{"name":"name","op":"eq","val":"2011-09_Barrow.PDS_stereoBRUVs"}]
 q='{"filters":[{"name":"user","op":"has","val":{"name":"email","op":"eq","val":"brooke.gibbons@uwa.edu.au"}}]}'
 ~~~~
 
-#### Search for all campaigns from Collaboration with wildcard search (%=wildcarg, ilike=case insensitive)
+#### Search for all campaigns from Collaboration with wildcard search (%=wildcard, ilike=case insensitive)
 ~~~~
 q='{"filters":[{"name":"workgroups","op":"any","val":{"name":"name","op":"ilike","val":"nsw%bruvs"}}]}'
 ~~~~
