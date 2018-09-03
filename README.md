@@ -1,7 +1,7 @@
 # globalarchive-query
 This repository holds two scripts which demonstrate how to download data from GlobalArchive by <i>"Workgroup"</i> and by <i>"Project"</i>.
 
-### First you will need to sSet your working directory
+### Set your working directory
 Before running the script create the main folder where you will be working out of. You can do this in File Explorer or in the Files Pane in RStudio.
 The script will then create two subdirectories. The first is a <i>"Downloads"</i> folder, where all files downloaded from GlobalArchive will sit. The second is a <i>"Tidy data"</i> folder, where the final .csvs will be saved once all the data has een combined.
 
