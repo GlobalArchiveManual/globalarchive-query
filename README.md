@@ -7,7 +7,7 @@ NOTE: The <i>get_campaigns_by_project</i> example only uses campaigns that have 
 Before running the script create the main folder where you will be working out of. You can do this in File Explorer or in the Files Pane in RStudio.
 The script will then create two subdirectories. The first is a <i>"Downloads"</i> folder, where all files downloaded from GlobalArchive will sit. The second is a <i>"Tidy data"</i> folder, where the final .csv files will be saved once all the data has een combined.
 
-<b>The script will also delete any files that are already in your <i>"Downloads"</i> folder (if you have used this working directory before) to ensure that only the most recent files are downloaded. Do not use this folder to save anything other than the downloaded files from GlobalArchive to avoid losing data. Data deleted using the unlink() function is unrecoverable.</b>
+<b>The script will also delete any files that are already in your <i>"Downloads"</i> folder if you have used this working directory before. This is to ensure that only the most recent files are downloaded. Do not use this folder to save anything other than the downloaded files from GlobalArchive to avoid losing data. Data deleted using the unlink() function is unrecoverable!</b>
 
 ### Add your API user token
 If you have been set an API token add it, or use the demonstration user API.
