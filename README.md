@@ -7,7 +7,7 @@ NOTE: The <i>get_campaigns_by_project</i> example only uses campaigns that have 
 Before running the script create the main folder where you will be working out of. You can do this in File Explorer or in the Files Pane in RStudio.
 The script will then create two subdirectories. The first is a <i>"Downloads"</i> folder, where all files downloaded from GlobalArchive will sit. The second is a <i>"Tidy data"</i> folder, where the final .csv files will be saved once all the data has een combined.
 
-The script will also delete any files that are already in your <i>"Downloads"</i> folder (if you have used this working directory before). To ensure that only the most recent files are downloaded. The API function can not change any files that have been altered on GlobalArchive, it can only replace files with the same name.
+<b>The script will also delete any files that are already in your <i>"Downloads"</i> folder (if you have used this working directory before) to ensure that only the most recent files are downloaded. Do not use this folder to save anything other than the downloaded files from GlobalArchive to avoid losing data. Data deleted using the unlink() function is unrecoverable.</b>
 
 ### Add your API user token
 If you have been set an API token add it, or use the demonstration user API.
@@ -44,4 +44,4 @@ q=""
 Once you have set the API and API search you are ready to download the data. These will be downloaded into your <i>"Downloads"</i> folder. The file structure of GlobalArchive is maintained. Within your <i>"Downloads"</i> folder there will be <i>Project</i> folders, and within these will be the individual campaigns.
 
 ### Combine downloads into final files
-The example scripts include functions to combine all the files of one type (info, metadata, points, count and length) from each campaign downloaded into one. These are then used to create the final maxn.csv and length.csv files. These two files are then saved into your <i>"Tidy data"</i> folder.
+The example scripts include functions to combine all the files of one type (info, metadata, points, count and length) from each campaign downloaded, into one dataframe. These are then used to create the final maxn.csv and length.csv files. These two files are saved into your <i>"Tidy data"</i> folder.
