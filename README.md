@@ -13,6 +13,21 @@ If you have been set an API token add it, or use the demonstration user API.
 ### Change the API search to match your needs
 There are a number of different ways to search. The two scripts in this repository demonstrate how to download data by <i>"Workgroup"</i> and by <i>"Project"</i> but you can also download data using these queries:
 
+#### Search for all campaigns matching pattern ( % = wildcard)
+q='{"filters":[{"name":"name","op":"like","val":"%_PointAddis_stereoBRUVs"}]}'
+
+#### Search for specific campaign by name
+q='{"filters":[{"name":"name","op":"eq","val":"2011-09_Barrow.PDS_stereoBRUVs"}]}'
+
+#### Search for all campaigns by user's email
+q='{"filters":[{"name":"user","op":"has","val":{"name":"email","op":"eq","val":"brooke.gibbons@uwa.edu.au"}}]}'
+
+#### Search for all campaigns from Collaboration with wildcard search (%=wildcarg, ilike=case insensitive)
+q='{"filters":[{"name":"workgroups","op":"any","val":{"name":"name","op":"ilike","val":"nsw%bruvs"}}]}'
+
+#### Get all campaigns that my user account has access to
+q=""
+
 ### Run the query and process campaign files
 Once you have set the API and API search you are ready to download the data. These will be downloaded into your <i>"Downloads"</i> folder. The file structure of GlobalArchive is maintained. Within your <i>"Downloads"</i> folder there will be <i>Project</i> folders, and within these will be the individual campaigns.
 
