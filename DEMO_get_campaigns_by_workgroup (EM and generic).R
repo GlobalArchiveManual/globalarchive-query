@@ -33,7 +33,7 @@ dir.create(file.path(working.dir, "Tidy data"))
 
 ### Setup your query ----
 # API
-API_USER_TOKEN <- "ef231f61b4ef204d39f47f58cccadf71af250a365e314e83dbcb3b08"  # Change to demo user when received
+API_USER_TOKEN <- "f09ec90ac77a2e11e65672dbe4e964b81be9345411a63a6a63eabe92"
 
 # This is the location where the downloaded data will sit ----
 DATA_DIR <- download.dir
