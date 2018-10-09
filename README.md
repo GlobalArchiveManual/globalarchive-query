@@ -10,7 +10,7 @@ The script will then create two subdirectories. The first is a <i>"Downloads"</i
 <b>The script will also delete any files that are already in your <i>"Downloads"</i> folder if you have used this working directory before. This is to ensure that only the most recent files are downloaded. Do not use this folder to save anything other than the downloaded files from GlobalArchive to avoid losing data. Data deleted using the unlink() function is unrecoverable!</b>
 
 ### Add your API user token
-If you have been set an API token add it, or use the demonstration user API.
+The demonstration user API is provided in the script. To obtain your personal API, when logged into GlobalArchive click on your username in the top right corner, then choose API token from the dropdown. Paste your new API into the script.
 
 ### Change the API search to match your needs
 There are a number of different ways to search. The two scripts in this repository demonstrate how to download data by <i>"Workgroup"</i> and by <i>"Project"</i> but you can also download data using these queries:
