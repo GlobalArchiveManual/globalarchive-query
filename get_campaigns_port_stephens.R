@@ -1,129 +1,168 @@
-#!/usr/bin/env Rscript
+rm(list=ls()) # Clear memory
 
-#install.packages("httr")
 library(httr)
-#install.packages("jsonlite")
 library(jsonlite)
-source("R/galib.R")
+library(RCurl)
+library(dplyr)
+library(purrr)
+library(readr)
+library(tidyr)
+library(stringr)
+library(plyr)
 
-################################################################################
-# Setup your query
-################################################################################
-# Set you GA API USER TOKEN for this query. If you do not set in the script, it
-# expects to receive it from the command line argument
-API_USER_TOKEN <- "f09ec90ac77a2e11e65672dbe4e964b81be9345411a63a6a63eabe92"  # hard code it here or pass it as an argument
-if (!exists("API_USER_TOKEN")) {
-  args = commandArgs(trailingOnly=TRUE)
-  if (length(args)==0) {stop("Not API_USER_TOKEN found. Either set it in the code or pass it as an argument to the script!")}
-  else {API_USER_TOKEN <- args[1]}   # get it from command line argument
-}
+### Source functions----
+galib <- getURL("https://raw.githubusercontent.com/UWAMEGFisheries/globalarchive-api/master/R/galib.R", ssl.verifypeer = FALSE)
+eval(parse(text = galib))
 
-# Configure this to be the location for which you want to download all
-# campaign and project data for this query
-DATA_DIR <- "Data"
+functions <-getURL("https://raw.githubusercontent.com/GlobalArchiveManual/globalarchive-query/master/Functions.R", ssl.verifypeer = FALSE)
+eval(parse(text = functions))
 
-# Configure search pattern for downloading all files
-# Example: only download .csv and .txt files
+### Set your working directory ----
+working.dir<-("C:/GitHub/globalarchive-query") # This is the only folder you will need to create outside of R
+setwd(working.dir)
+
+## Save directory names ----
+download.dir<-paste(working.dir,"Downloads",sep="/")
+tidy.dir<-paste(working.dir,"Tidy data",sep="/")
+
+unlink(download.dir, recursive=TRUE) # Clear downloads folder (this will delete everything in the downloads folder (very scary))
+
+## Create a folder for downloaded data and tidy data ----
+dir.create(file.path(working.dir, "Downloads"))
+dir.create(file.path(working.dir, "Tidy data"))
+
+### Setup your query ----
+# API
+API_USER_TOKEN <- "b581a9ed9a2794010dd5edb4d68f214a81990d1645c4e3ad4caad0dd" # tims for the moment
+
+# This is the location where the downloaded data will sit ----
+DATA_DIR <- download.dir
+
+# Configure search pattern for downloading all files ----
 MATCH_FILES <- ".csv$|.txt$"
-# Example: only download files with "_Metadata."" in the filename
-# MATCH_FILES <- "_Metadata."
-# Example: download all files
-# MATCH_FILES <- NULL
 
-# Customise the API search criteria for your query (JSON)
-# The examples below show some possible search queries. Many more types of
-# queries are available. Note, only the last one will be used since it
-# overwrites the previous ones, so comment out the ones you're not using
-#TODO: build a function to help construct common queries
-# EXAMPLE 1: search for all campaigns matching pattern ( % = wildcard)
-# q='{"filters":[{"name":"name","op":"like","val":"%_PointAddis_stereoBRUVs"}]}'
-# EXAMPLE 2: search for specific campaign by name
-# q='{"filters":[{"name":"name","op":"eq","val":"2011-09_Barrow.PDS_stereoBRUVs"}]}'
-# EXAMPLE 3: search for all campaigns by user's email
-# q='{"filters":[{"name":"user","op":"has","val":{"name":"email","op":"eq","val":"euan.harvey@curtin.edu.au"}}]}'
-# EXAMPLE 4: search for all campaigns from Project (note + for spaces)
-q='{"filters":[{"name":"project","op":"has","val":{"name":"name","op":"eq","val":"Port+Stephens-Great+Lakes+Marine+Park+MER+Program"}}]}'
+#Search for all campaigns matching pattern ( % = wildcard)
+q='{"filters":[{"name":"name","op":"like","val":"%PSGLMP%"}]}' # % on either side can be anything - this gets all campaigns that contain "PSGLMP" in the campaign name 
 
-# EXAMPLE 5: search for all campaigns from Collaboration (note + for spaces)
-# q='{"filters":[{"name":"workgroups","op":"any","val":{"name":"name","op":"eq","val":"Australian+BRUV+synthesis"}}]}'
-# EXAMPLE 6: search for all campaigns from Collaboration with wildcard search (%=wildcarg, ilike=case insensitive)
-# q='{"filters":[{"name":"workgroups","op":"any","val":{"name":"name","op":"ilike","val":"nsw%bruvs"}}]}'
-# EXAMPLE 7: get all campaigns that my user account has access to
-# q=""
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-################################################################################
-# The following is an example of a user defined function that is passed into the
-# API function to operate on the returned campaign objects. You can customise
-# this to do whatever you want on each campaign that matches you search and will
-# operate on each individually. If you want to work on all campaigns that match
-# a search you can maintain data in data frames with shared scope.
-################################################################################
-process_campaign_object <- function(object) {
-  #print(toJSON(object, pretty=TRUE))  # show available info from object list
-
-  # Perform another request to the API to get more detailed campaign info
-  campaign <- ga.get.campaign(API_USER_TOKEN, object["id"])
-  #print(toJSON(campaign, pretty=TRUE))  # show all avialable info
-
-  # Print campaign_info to console
-  ga.print.campaign_details(campaign)  # prints details about campaign
-
-  # Download/save campaign files and data
-  campaign_path <- file.path(DATA_DIR, campaign$project["name"], campaign$name) # create campaign path: DATA_DIR/<project>/<campaign>
-  dir.create(campaign_path, showWarnings = FALSE, recursive=TRUE)             # create campaign dir (if doesn't already exist)
-  campaign_files = ga.download.campaign_files(API_USER_TOKEN, campaign$files, campaign_path, match=MATCH_FILES)   # download all campaign files
-  ga.download.campaign_info(API_USER_TOKEN, campaign$info, campaign_path)     # generate csv file containing all campaign info properties
-  ga.download.campaign_record(API_USER_TOKEN, campaign, campaign_path)        # generate json file containing campaign record information
-  #print(campaign_files)  # prints output of campaign files including saved location
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-################################################################################
-# Run the query and process the campaigns
-################################################################################
-# This is where all the magic happens. It makes the API request to retrieve the
-# campaigns matching the query "q" and then processes each one using the
-# function pointer "process_campaign_object"
+### Run the query and process the campaigns. Files will be downloaded into DATA_DIR ----
 nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
 
+## Annotation info ----
+info<-list.files(path=download.dir,
+                 recursive=T,
+                 pattern="info.csv",
+                 full.names=T)%>%
+  map_df(~read_files_csv(.))#%>%
+  #select(campaignid,name,value)%>%
+  tidyr::spread(name,value)
+
+# Going to try and read info in through a loop
+
+  
+  
+uniq.campaign <- unique(unlist(metadata$campaignid))
+for (i in 1:length(uniq.campaign)){
+  # Subset metadata to get project info
+  metadata <- subset(metadata, campaignid == uniq.campaign[i])
+  
+  remove.commas <- function(c){
+    ( gsub(",", '.', c))
+  }
+  
+  remove.colon <- function(c){
+    ( gsub(";", '.', c))
+  }
+  
+  remove<-function(c){
+    ( gsub(" ", " ", c))
+  }
+  
+  project<-as.character(unique(metadata$project)) # save project name
+  campaignid<-as.character(unique(metadata$campaignid))
+  
+  # set wd
+  setwd(paste(download.dir,project,campaignid,sep="/"))
+  
+  # read in info csv 
+  info<-read.csv(".info.csv")
+  info[] <- sapply(info, remove.commas)
+  info[] <- sapply(info, remove.colon)
+  info[] <- sapply(info, remove)
+  # write info with campaign name
+  write.csv(info, file=paste(campaignid,"info.csv",sep=""), quote=FALSE,row.names = FALSE)
+}
+
+View(info)
+
+project
 
 
+## Metadata files ----
+metadata <-list.files(path=download.dir,
+                      recursive=T,
+                      pattern="Metadata.csv",
+                      full.names=T) %>% 
+  map_df(~read_files_csv(.))%>%
+  dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>%
+  #left_join(info)%>% # Join in annotation info
+  glimpse()
 
+unique(metadata$campaignid)
+name<-as.character(unique(metadata$project))
 
+## Points files ----
+points <-list.files(path=download.dir,
+                    recursive=T,
+                    pattern="_Points.txt",
+                    full.names=T) %>% 
+  map_df(~read_files_txt(.))%>%
+  dplyr::rename(sample=opcode)%>%
+  dplyr::select(campaignid,sample,family,genus,species,number,frame)%>%
+  glimpse()
 
+## 3D Points files ----
+threedpoints <-list.files(path=download.dir,
+                          recursive=T,
+                          pattern="3DPoints.txt",
+                          full.names=T) %>%
+  map_df(~read_files_txt(.))%>%
+  dplyr::rename(sample=opcode)%>%
+  dplyr::select(campaignid,sample,family,genus,species,range,number,comment)%>%
+  glimpse()
 
+## Lengths files ----
+lengths <-list.files(path=download.dir,
+                     recursive=T,
+                     pattern="Lengths.txt",
+                     full.names=T) %>% 
+  map_df(~read_files_txt(.))%>%
+  dplyr::rename(sample=opcode)%>%
+  dplyr::select(campaignid,sample,family,genus,species,length,range,number,comment)%>%
+  glimpse()
 
+## Make Maxn and length dataframes----
+maxn<-points%>%
+  group_by(campaignid,sample,frame,family,genus,species)%>%
+  dplyr::mutate(number=as.numeric(number))%>%
+  dplyr::summarise(maxn=sum(number))%>%
+  dplyr::group_by(campaignid,sample,family,genus,species)%>%
+  slice(which.max(maxn))%>%
+  ungroup()%>%
+  filter(!is.na(maxn))%>%
+  filter(!maxn==0)%>%
+  inner_join(metadata)%>%
+  filter(successful.count=="Yes")%>%
+  glimpse()
 
+length3dpoints<-lengths%>%
+  plyr::rbind.fill(threedpoints)%>%
+  dplyr::mutate(length=as.numeric(length))%>%
+  dplyr::mutate(number=as.numeric(number))%>%
+  inner_join(metadata)%>%
+  filter(successful.length=="Yes")%>%
+  glimpse()
 
-
+## Save maxn and length files ----
+setwd(tidy.dir)
+write.csv(maxn,paste(name,"maxn.csv",sep="_"),row.names = FALSE)
+write.csv(length3dpoints,paste(name,"length3dpoints.csv",sep="_"),row.names = FALSE)
