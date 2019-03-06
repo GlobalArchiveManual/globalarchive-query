@@ -9,13 +9,16 @@ library(readr)
 library(tidyr)
 library(stringr)
 library(plyr)
+library(devtools)
+install_github("UWAMEGFisheries/GlobalArchive")
+library(GlobalArchive)
 
-### Source functions----
-galib <- getURL("https://raw.githubusercontent.com/UWAMEGFisheries/globalarchive-api/master/R/galib.R", ssl.verifypeer = FALSE)
-eval(parse(text = galib))
-
-functions <-getURL("https://raw.githubusercontent.com/GlobalArchiveManual/globalarchive-query/master/Functions.R", ssl.verifypeer = FALSE)
-eval(parse(text = functions))
+# Some url patterns for querying ----
+URL_DOMAIN <- "https://globalarchive.org"
+# URL_DOMAIN <- "http://localhost:5000"
+API_ENDPOINT_CAMPAIGN_LIST <- "/api/campaign"
+API_ENDPOINT_CAMPAIGN_DETAIL <- "/api/campaign-full/%s"
+API_ENDPOINT_CAMPAIGN_FILE <- "/api/campaign_file_file/%s"
 
 ### Set your working directory ----
 working.dir<-("C:/GitHub/globalarchive-query") # This is the only folder you will need to create outside of R
@@ -47,56 +50,6 @@ q='{"filters":[{"name":"name","op":"like","val":"%PSGLMP%"}]}' # % on either sid
 ### Run the query and process the campaigns. Files will be downloaded into DATA_DIR ----
 nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
 
-## Annotation info ----
-info<-list.files(path=download.dir,
-                 recursive=T,
-                 pattern="info.csv",
-                 full.names=T)%>%
-  map_df(~read_files_csv(.))#%>%
-  #select(campaignid,name,value)%>%
-  tidyr::spread(name,value)
-
-# Going to try and read info in through a loop
-
-  
-  
-uniq.campaign <- unique(unlist(metadata$campaignid))
-for (i in 1:length(uniq.campaign)){
-  # Subset metadata to get project info
-  metadata <- subset(metadata, campaignid == uniq.campaign[i])
-  
-  remove.commas <- function(c){
-    ( gsub(",", '.', c))
-  }
-  
-  remove.colon <- function(c){
-    ( gsub(";", '.', c))
-  }
-  
-  remove<-function(c){
-    ( gsub(" ", " ", c))
-  }
-  
-  project<-as.character(unique(metadata$project)) # save project name
-  campaignid<-as.character(unique(metadata$campaignid))
-  
-  # set wd
-  setwd(paste(download.dir,project,campaignid,sep="/"))
-  
-  # read in info csv 
-  info<-read.csv(".info.csv")
-  info[] <- sapply(info, remove.commas)
-  info[] <- sapply(info, remove.colon)
-  info[] <- sapply(info, remove)
-  # write info with campaign name
-  write.csv(info, file=paste(campaignid,"info.csv",sep=""), quote=FALSE,row.names = FALSE)
-}
-
-View(info)
-
-project
-
-
 ## Metadata files ----
 metadata <-list.files(path=download.dir,
                       recursive=T,
@@ -109,6 +62,41 @@ metadata <-list.files(path=download.dir,
 
 unique(metadata$campaignid)
 name<-as.character(unique(metadata$project))
+
+# Use metadata to make a list to re-save info with campagn name 
+uniq.campaign <- unique(unlist(metadata$campaignid))
+info.join<- data.frame()
+
+info.join<-c("Campaignid","Project")%>%
+  map_dfr( ~tibble(!!.x := logical() ) )
+
+for (i in 1:length(uniq.campaign)){
+  # Subset metadata to get project info
+  metadata.sub <- subset(metadata, campaignid == uniq.campaign[i])
+  
+  remove.commas <- function(c){( gsub(",", '.', c))}
+  remove.colon <- function(c){( gsub(";", '.', c))}
+  remove<-function(c){( gsub(" ", " ", c))}
+  
+  project<-as.character(unique(metadata.sub$project)) # save project name
+  campaignid<-as.character(unique(metadata.sub$campaignid))
+  
+  # set wd
+  setwd(paste(download.dir,project,campaignid,sep="/"))
+  
+  # read in info csv 
+  info<-read.csv(".info.csv")
+  info[] <- sapply(info, remove.commas)
+  info[] <- sapply(info, remove.colon)
+  info[] <- sapply(info, remove)
+  
+  df <- data.frame(info)
+  df$campaignid<-as.character(campaignid)
+  info.join <- rbind(info.join,df)
+  
+  # write info with campaign name
+  write.csv(info, file=paste(campaignid,"info.csv",sep="_"), quote=FALSE,row.names = FALSE)
+}
 
 ## Points files ----
 points <-list.files(path=download.dir,
@@ -128,7 +116,7 @@ threedpoints <-list.files(path=download.dir,
   map_df(~read_files_txt(.))%>%
   dplyr::rename(sample=opcode)%>%
   dplyr::select(campaignid,sample,family,genus,species,range,number,comment)%>%
-  glimpse()
+  glimpse() # to ask tim how to do this better
 
 ## Lengths files ----
 lengths <-list.files(path=download.dir,

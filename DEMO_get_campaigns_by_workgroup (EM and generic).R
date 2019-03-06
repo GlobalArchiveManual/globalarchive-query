@@ -1,5 +1,6 @@
 rm(list=ls()) # Clear memory
 
+# Load Libraries ----
 library(httr)
 library(jsonlite)
 library(RCurl)
@@ -9,13 +10,16 @@ library(readr)
 library(tidyr)
 library(stringr)
 library(plyr)
+library(devtools)
+install_github("UWAMEGFisheries/GlobalArchive")
+library(GlobalArchive)
 
-### Source functions----
-galib <- getURL("https://raw.githubusercontent.com/UWAMEGFisheries/globalarchive-api/master/R/galib.R", ssl.verifypeer = FALSE)
-eval(parse(text = galib))
-
-functions <-getURL("https://raw.githubusercontent.com/GlobalArchiveManual/globalarchive-query/master/Functions.R", ssl.verifypeer = FALSE)
-eval(parse(text = functions))
+# Some url patterns for querying ----
+URL_DOMAIN <- "https://globalarchive.org"
+# URL_DOMAIN <- "http://localhost:5000"
+API_ENDPOINT_CAMPAIGN_LIST <- "/api/campaign"
+API_ENDPOINT_CAMPAIGN_DETAIL <- "/api/campaign-full/%s"
+API_ENDPOINT_CAMPAIGN_FILE <- "/api/campaign_file_file/%s"
 
 ### Set your working directory ----
 working.dir<-("C:/GitHub/globalarchive-query") # This is the only folder you will need to create outside of R
@@ -23,7 +27,7 @@ setwd(working.dir)
 
 ## Save directory names ----
 download.dir<-paste(working.dir,"Downloads",sep="/")
-tidy.dir<-paste(working.dir,"Tidy data",sep="/")
+tidy.dir<-paste(working.dir,"Data/Tidy data",sep="/")
 
 unlink(download.dir, recursive=TRUE) # Clear downloads folder (this will delete everything in the downloads folder (very scary)), DO NOT save anything in this file that is not downloaded using the query as it will be deleted and is not recoverable
 
@@ -33,7 +37,7 @@ dir.create(file.path(working.dir, "Tidy data"))
 
 ### Setup your query ----
 # API
-API_USER_TOKEN <- "f09ec90ac77a2e11e65672dbe4e964b81be9345411a63a6a63eabe92"
+API_USER_TOKEN <- "b581a9ed9a2794010dd5edb4d68f214a81990d1645c4e3ad4caad0dd"
 
 # This is the location where the downloaded data will sit ----
 DATA_DIR <- download.dir
@@ -56,7 +60,7 @@ info<-list.files(path=download.dir,
                  pattern="_info.csv",
                  full.names=T) %>% 
   map_df(~read_files_csv(.))%>%
-  select(campaignid,name,value)%>%
+  #select(campaignid,name,value)%>%
   tidyr::spread(name,value)
 
 ## Metadata files ----
@@ -66,7 +70,7 @@ metadata <-list.files(path=download.dir,
                       full.names=T) %>% 
   map_df(~read_files_csv(.))%>%
   dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>%
-  left_join(info)%>% # Join in annotation info
+  #left_join(info)%>% # Join in annotation info
   glimpse()
 
 ## Eventmeasure files ----
@@ -143,7 +147,7 @@ length3dpoints<-lengths%>%
   plyr::rbind.fill(threedpoints)%>%
   plyr::rbind.fill(length)%>%
   dplyr::mutate(number=ifelse(number%in%c(0,NA),count,number))%>%
-  dplyr::select(-c(count))
+  dplyr::select(-c(count))%>%
   dplyr::mutate(length=as.numeric(length))%>%
   dplyr::mutate(number=as.numeric(number))%>%
   inner_join(metadata)%>%
@@ -151,6 +155,7 @@ length3dpoints<-lengths%>%
   glimpse()
   
 ## Save maxn and length files ----
-setwd(tidy.dir)
+setwd(temp.dir)
 write.csv(maxn,paste(name,"maxn.csv",sep="_"),row.names = FALSE)
 write.csv(length3dpoints,paste(name,"length3dpoints.csv",sep="_"),row.names = FALSE)
+write.csv(metadata,paste(name,"metadata.csv",sep="_"),row.names = FALSE)
