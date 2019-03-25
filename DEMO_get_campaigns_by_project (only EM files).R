@@ -13,10 +13,10 @@ library(plyr)
 library(devtools)
 install_github("UWAMEGFisheries/GlobalArchive")
 library(GlobalArchive)
+library(R.utils)
 
 # Some url patterns for querying ----
 URL_DOMAIN <- "https://globalarchive.org"
-# URL_DOMAIN <- "http://localhost:5000"
 API_ENDPOINT_CAMPAIGN_LIST <- "/api/campaign"
 API_ENDPOINT_CAMPAIGN_DETAIL <- "/api/campaign-full/%s"
 API_ENDPOINT_CAMPAIGN_FILE <- "/api/campaign_file_file/%s"
@@ -38,7 +38,9 @@ unlink(download.dir, recursive=TRUE) # Clear downloads folder (this will delete 
 
 ## Create a folder for downloaded data and tidy data ----
 dir.create(file.path(working.dir, "Downloads"))
-dir.create(file.path(working.dir, "Tidy data"))
+dir.create(file.path(working.dir, "Data"))
+dir.create(file.path(data.dir, "Tidy data"))
+dir.create(file.path(data.dir, "Temporary data"))
 
 ### Setup your query ----
 # API
@@ -56,17 +58,6 @@ q='{"filters":[{"name":"project","op":"has","val":{"name":"name","op":"eq","val"
 ### Run the query and process the campaigns. Files will be downloaded into DATA_DIR ----
 nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
 
-## Annotation info ----
-# info<-list.files(path=download.dir,
-#                  recursive=T,
-#                  pattern="_info.csv",
-#                  full.names=T) %>% 
-#   map_df(~read_files_csv(.))%>%
-#   select(campaignid,name,value)%>%
-#   tidyr::spread(name,value)
-
-read_files_txt()
-
 ## Metadata files ----
 metadata <-list.files(path=download.dir,
              recursive=T,
@@ -74,10 +65,7 @@ metadata <-list.files(path=download.dir,
              full.names=T) %>% 
   map_df(~read_files_csv(.))%>%
   dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>%
-  #left_join(info)%>% # Join in annotation info
   glimpse()
-
-name<-as.character(unique(metadata$project))
 
 ## Points files ----
 points <-list.files(path=download.dir,
@@ -90,20 +78,36 @@ points <-list.files(path=download.dir,
   glimpse()
 
 ## 3D Points files ----
-threedpoints <-list.files(path=download.dir,
-             recursive=T,
-             pattern="3DPoints.txt",
-             full.names=T) %>%
+threedpoints.files <-list.files(path=download.dir,
+                                recursive=T,
+                                pattern="3DPoints.txt",
+                                full.names=T) # create a vector with all 3d point files that need to be read in 
+
+threedpoints.files$lines<-sapply(threedpoints.files,countLines)
+
+threedpoints<-as.data.frame(threedpoints.files)%>%
+  mutate(campaign=row.names(.))%>%
+  filter(lines>1)%>% # filter out all empty text files
+  select(campaign)%>%
+  as_vector(.)%>%
   map_df(~read_files_txt(.))%>%
   dplyr::rename(sample=opcode)%>%
   dplyr::select(campaignid,sample,family,genus,species,range,number,comment)%>%
-  glimpse()
+  glimpse() 
 
 ## Lengths files ----
-lengths <-list.files(path=download.dir,
-             recursive=T,
-             pattern="Lengths.txt",
-             full.names=T) %>% 
+length.files <-list.files(path=download.dir,
+                          recursive=T,
+                          pattern="Lengths.txt",
+                          full.names=T) # create a vector with all lengths files that need to be read in 
+
+length.files$lines<-sapply(length.files,countLines) # add a new column that counts the number of lines in each file
+
+lengths<-as.data.frame(length.files)%>%
+  mutate(campaign=row.names(.))%>%
+  filter(lines>1)%>% # filter out all empty text files
+  select(campaign)%>%
+  as_vector(.)%>%  
   map_df(~read_files_txt(.))%>%
   dplyr::rename(sample=opcode)%>%
   dplyr::select(campaignid,sample,family,genus,species,length,range,number,comment)%>%

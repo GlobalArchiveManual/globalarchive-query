@@ -35,8 +35,8 @@ study<-"project.example" ## change for your project
 working.dir<-("C:/GitHub/globalarchive-query")
 
 # Set sub directories----
-plots.dir=paste(work.dir,"Plots",sep="/")
-data.dir=paste(work.dir,"Data",sep="/")
+plots.dir=paste(working.dir,"Plots",sep="/")
+data.dir=paste(working.dir,"Data",sep="/")
 export.dir=paste(data.dir,"Database output",sep="/")
 temp.dir=paste(data.dir,"Temporary data",sep="/")
 tidy.dir=paste(data.dir,"Tidy data",sep="/")
@@ -47,6 +47,7 @@ dir()
 
 # Make species families to merge back in after data is complete -----
 maxn.families<-read_csv(file=paste(study,"checked.maxn.csv",sep = "_"),na = c("", " "))%>%
+  mutate(scientific=paste(family,genus,species,sep=" "))%>%
   filter(!(family=="Unknown"))%>%
   select(c(family,genus,species,scientific))%>%
   distinct() #to join back in after complete
@@ -86,7 +87,7 @@ length.families<-read_csv(file=paste(study,"checked.length.csv",sep = "_"),na = 
 
 complete.length.number<-read_csv(file=paste(study,"checked.length.csv",sep = "_"))%>% #na = c("", " "))
   filter(!(family=="Unknown"))%>%
-  dplyr::select(sample,family,genus,species,length,number,range,activity)%>%
+  dplyr::select(sample,family,genus,species,length,number,range)%>%
   complete(sample,nesting(family,genus,species)) %>%
   replace_na(list(number = 0))%>% #we add in zeros - in case we want to calulate abundance of species based on a length rule (e.g. greater than legal size)
   ungroup()%>%
@@ -188,5 +189,3 @@ write.csv(complete.maxn, file=paste(study,"complete.maxn.csv",sep = "_"), row.na
 write.csv(complete.length.number.mass, file=paste(study,"complete.length.number.mass.csv",sep = "_"), row.names=FALSE)
 
 write.csv(complete.length.number, file=paste(study,"complete.length.number.csv",sep = "_"), row.names=FALSE)
-
-# GO TO SCRIPT 5

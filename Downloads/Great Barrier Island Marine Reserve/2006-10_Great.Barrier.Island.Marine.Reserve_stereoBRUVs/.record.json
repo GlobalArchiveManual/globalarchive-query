@@ -1,0 +1,79 @@
+{
+  "created_at": ["2017-08-11T06:20:16.486152"],
+  "current_user_has_access": [true],
+  "current_user_is_owner": [true],
+  "deployment_count": [52],
+  "description": [""],
+  "files": [
+    {
+      "id": 4022,
+      "iscompressed": true,
+      "name": "2006-10_Great.Barrier.Island.Marine.Reserve_stereoBRUVs_Metadata.txt",
+      "user_id": 2
+    },
+    {
+      "id": 4046,
+      "iscompressed": true,
+      "name": "2006-10_Great.Barrier.Island.Marine.Reserve_stereoBRUVs_Habitat.classes.txt",
+      "user_id": 2
+    },
+    {
+      "id": 4047,
+      "iscompressed": true,
+      "name": "2006-10_Great.Barrier.Island.Marine.Reserve_stereoBRUVs_Length.txt",
+      "user_id": 2
+    },
+    {
+      "id": 4048,
+      "iscompressed": true,
+      "name": "2006-10_Great.Barrier.Island.Marine.Reserve_stereoBRUVs_Count.txt",
+      "user_id": 2
+    }
+  ],
+  "id": [409],
+  "info": [
+    {
+      "campaigninfoprop_id": 44,
+      "id": 218,
+      "property": {
+        "id": 44,
+        "is_filter": true,
+        "name": "Annotation: Upload type"
+      },
+      "value": "Generic"
+    }
+  ],
+  "name": ["2006-10_Great.Barrier.Island.Marine.Reserve_stereoBRUVs"],
+  "platform": {
+    "created_at": ["2017-05-04T06:56:34.962233"],
+    "fileurl": ["/api/platform_file/1"],
+    "id": [1],
+    "name": ["stereo-BRUVs"]
+  },
+  "project": {
+    "current_user_is_member": [false],
+    "current_user_is_owner": [true],
+    "grouptype": ["project"],
+    "id": [102],
+    "is_public": [false],
+    "name": ["Great Barrier Island Marine Reserve"]
+  },
+  "project_id": [102],
+  "user": {
+    "email": ["tim.langlois@uwa.edu.au"],
+    "first_name": ["Tim"],
+    "id": [2],
+    "is_admin": [false],
+    "last_name": ["Langlois"],
+    "role_id": {}
+  },
+  "workgroups": [
+    {
+      "current_user_is_member": false,
+      "current_user_is_owner": true,
+      "id": 36,
+      "is_public": false,
+      "name": "Example: merging different data types"
+    }
+  ]
+}

@@ -93,6 +93,9 @@ fish.greater.than.1.meter<-filter(length,length>1000)%>%
 # Create google sheet for checking errors ----
 errors <- gs_new(paste(study,"errors",sep="."), ws_title = "fish.greater.than.1.meter",input=fish.greater.than.1.meter, trim = TRUE, verbose = FALSE)
 
+# Use this line instead if you have already ran through the script ----
+errors <- gs_title(paste(study,"errors",sep="."))
+
 #setwd(temp.dir)
 #write.csv(fish.greater.than.1.meter,file=paste(study,"check","length.greater.than.1.meter.csv",sep = "_"), row.names=FALSE)
 
@@ -246,11 +249,12 @@ taxa.maxn.vs.stereo.summary<-length%>%
   semi_join(length.sample)%>% # only keep ones where length was possible
   replace_na(list(percent.diff=1))%>%
   filter(!percent.diff%in%c(0))%>%
+  select(project,campaignid,sample,family,genus,species,maxn,stereo.maxn,percent.diff,frame)%>%
   glimpse()
 
 #write.csv(taxa.maxn.vs.stereo.summary,file=paste(study,"taxa.maxn.vs.stereo.summary.csv",sep = "_"), row.names=FALSE)
-
 errors <- errors%>%
+  gs_ws_delete(ws = "taxa.maxn.vs.stereo.summary") %>% 
   gs_ws_new(ws_title = "taxa.maxn.vs.stereo.summary", input = taxa.maxn.vs.stereo.summary,
             trim = TRUE, verbose = FALSE)
 
