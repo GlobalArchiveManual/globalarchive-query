@@ -1,0 +1,7 @@
+{
+    "installOptions" : {
+        "installDependencies" : true,
+        "installFromRepository" : true,
+        "libraryPath" : "\\\\uniwa.uwa.edu.au/userhome/Staff1/00097191/My Documents/R/win-library/3.5"
+    }
+}

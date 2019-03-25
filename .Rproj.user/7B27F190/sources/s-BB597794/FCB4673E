@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1535957671886.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "FCB4673E",
+    "lastKnownWriteTime" : 1551828995,
+    "last_content_update" : 1551828995014,
+    "path" : "C:/GitHub/globalarchive-query/DEMO_get_campaigns_by_matching_pattern (Port Stephens).R",
+    "project_path" : "DEMO_get_campaigns_by_matching_pattern (Port Stephens).R",
+    "properties" : {
+        "cursorPosition" : "84,55",
+        "scrollLine" : "62"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
