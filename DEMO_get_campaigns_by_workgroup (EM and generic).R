@@ -15,18 +15,11 @@ install_github("UWAMEGFisheries/GlobalArchive")
 library(GlobalArchive)
 library(R.utils)
 
-# Some url patterns for querying ----
-URL_DOMAIN <- "https://globalarchive.org"
-API_ENDPOINT_CAMPAIGN_LIST <- "/api/campaign"
-API_ENDPOINT_CAMPAIGN_DETAIL <- "/api/campaign-full/%s"
-API_ENDPOINT_CAMPAIGN_FILE <- "/api/campaign_file_file/%s"
-
 # Study name ---
 study<-"example.data.types"
 
 ### Set your working directory ----
-working.dir<-("C:/GitHub/globalarchive-query") # This is the only folder you will need to create outside of R
-setwd(working.dir)
+working.dir<-("C:/GitHub/globalarchive-query")
 
 ## Save directory names ----
 download.dir<-paste(working.dir,"Downloads",sep="/")
@@ -40,15 +33,13 @@ download.dir<-paste(working.dir,"Downloads",sep="/")
 temp.dir=paste(data.dir,"Temporary data",sep="/")
 tidy.dir=paste(data.dir,"Tidy data",sep="/")
 
+# Bring in some consistent values used to download ----
+setwd(working.dir)
+source("values.R") 
+
 ### Setup your query ----
 # API
 API_USER_TOKEN <- "b581a9ed9a2794010dd5edb4d68f214a81990d1645c4e3ad4caad0dd"
-
-# This is the location where the downloaded data will sit ----
-DATA_DIR <- download.dir
-
-# Configure search pattern for downloading all files ----
-MATCH_FILES <- ".csv$|.txt$"
 
 # API search by Collaboration/Workgroup (space replaced with +) ----
 q='{"filters":[{"name":"workgroups","op":"any","val":{"name":"name","op":"eq","val":"Example:+merging+different+data+types"}}]}'
@@ -57,83 +48,43 @@ q='{"filters":[{"name":"workgroups","op":"any","val":{"name":"name","op":"eq","v
 nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
 
 ## Metadata files ----
-metadata <-list.files(path=download.dir,
-                      recursive=T,
-                      pattern="Metadata.csv",
-                      full.names=T) %>% 
-  map_df(~read_files_csv(.))%>%
-  dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>%
+metadata <-list.files.GA("_Metadata.csv")%>%
+  map_df(~read_files_csv(.))%>%  # read them in and combine them into one dataframe
+  dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>% # Turn this line on/off to simplify metadata data frame
   glimpse()
-
-info.files <- list.files(path=download.dir,
-                         recursive=T,
-                         pattern=".info.csv",
-                         full.names=T) 
-
-info.files$lines<-sapply(info.files,countLines)
-
 ## Eventmeasure files ----
 ## Points files ----
-points <-list.files(path=download.dir,
-                    recursive=T,
-                    pattern="_Points.txt",
-                    full.names=T) %>% 
-  map_df(~read_files_txt(.))%>%
-  dplyr::rename(sample=opcode)%>%
+points <-list.files.GA("_Points.txt")%>%
+  map_df(~read_files_txt(.))%>% # read them in and combine them into one dataframe
   dplyr::select(campaignid,sample,family,genus,species,number,frame)%>%
   glimpse()
 
 ## 3D Points files ----
-threedpoints.files <-list.files(path=download.dir,
-                                recursive=T,
-                                pattern="3DPoints.txt",
-                                full.names=T) # create a vector with all 3d point files that need to be read in 
-
+threedpoints.files <-list.files.GA("3DPoints.txt")
 threedpoints.files$lines<-sapply(threedpoints.files,countLines)
 
-threedpoints<-as.data.frame(threedpoints.files)%>%
-  mutate(campaign=row.names(.))%>%
-  filter(lines>1)%>% # filter out all empty text files
-  select(campaign)%>%
-  as_vector(.)%>%
-  map_df(~read_files_txt(.))%>%
-  dplyr::rename(sample=opcode)%>%
-  dplyr::select(campaignid,sample,family,genus,species,range,number,comment)%>%
+threedpoints<-expand.files(threedpoints.files)%>%
+  map_df(~read_files_txt(.))%>% # read them in and combine them into one dataframe
   glimpse() 
 
 ## Lengths files ----
-length.files <-list.files(path=download.dir,
-                          recursive=T,
-                          pattern="Lengths.txt",
-                          full.names=T) # create a vector with all lengths files that need to be read in 
-
+length.files <-list.files.GA("Lengths.txt")
 length.files$lines<-sapply(length.files,countLines) # add a new column that counts the number of lines in each file
 
-lengths<-as.data.frame(length.files)%>%
-  mutate(campaign=row.names(.))%>%
-  filter(lines>1)%>% # filter out all empty text files
-  select(campaign)%>%
-  as_vector(.)%>%  
-  map_df(~read_files_txt(.))%>%
-  dplyr::rename(sample=opcode)%>%
-  dplyr::select(campaignid,sample,family,genus,species,length,range,number,comment)%>%
+lengths<-expand.files(length.files)%>%
+  map_df(~read_files_txt(.))%>% # read them in and combine them into one dataframe
+  #dplyr::select(campaignid,sample,family,genus,species,length,range,number,comment)%>%
   glimpse()
 
 ### Generic Campaigns ----
 ## Count fles ----
-count <-list.files(path=download.dir,
-                     recursive=T,
-                     pattern="Count.csv",
-                     full.names=T) %>% 
+count <-list.files.GA("Count.csv")%>% 
   map_df(~read_files_csv(.))%>%
   dplyr::select(campaignid,sample,family,genus,species,count)%>%
   glimpse()
 
 ## Length files ----
-length <-list.files(path=download.dir,
-                     recursive=T,
-                     pattern="Length.csv",
-                     full.names=T) %>% 
+length <-list.files.GA("Length.csv")%>% 
   map_df(~read_files_csv(.))%>%
   dplyr::select(campaignid,sample,family,genus,species,length,count)%>%
   glimpse()
@@ -168,9 +119,33 @@ length3dpoints<-lengths%>%
   inner_join(metadata)%>%
   filter(successful.length=="Yes")%>%
   glimpse()
-  
+
+### Bring in additional info ----
+uniq.campaign <- unique(unlist(metadata$campaignid)) # Use metadata to make a list to re-save info with campagn name 
+
+info.join<- data.frame()%>% # create a blank dataframe with campaignid and Project
+  c("campaignid","project")%>%
+  map_dfr( ~tibble(!!.x := logical() ) )
+
+for (i in 1:length(uniq.campaign)){
+  metadata.sub <- subset(metadata, campaignid == uniq.campaign[i]) # Subset metadata to get project info
+  project<-as.character(unique(metadata.sub$project)) # save project name
+  campaignid<-as.character(unique(metadata.sub$campaignid)) # save campaign name
+  setwd(paste(download.dir,project,campaignid,sep="/")) # set wd
+  info<-read.csv(".info.csv") # read in info csv 
+  df <- data.frame(info)%>% # make a dataframe
+    mutate(campaignid=as.character(campaignid))%>% # add in campaign id
+    mutate(project=as.character(project)) # add in project
+  info.join <- rbind(info.join,df) # add new dataframe to blank dataframe, loop will then add in the next campaign
+}
+
+info<-info.join%>%
+  select(project,campaignid,name,value)%>%
+  spread(.,name,value)
+
 ## Save maxn and length files ----
 setwd(temp.dir)
 write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 write.csv(length3dpoints,paste(study,"length3dpoints.csv",sep="_"),row.names = FALSE)
 write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
+write.csv(info,paste(study,"info.csv",sep="_"),row.names = FALSE)

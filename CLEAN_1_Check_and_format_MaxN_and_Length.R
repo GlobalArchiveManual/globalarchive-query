@@ -38,9 +38,10 @@ setwd(working.dir)
 # Set sub directories----
 plots.dir=paste(working.dir,"Plots",sep="/")
 data.dir=paste(working.dir,"Data",sep="/")
-download.dir<-paste(working.dir,"Downloads",sep="/")
+download.dir=paste(working.dir,"Downloads",sep="/")
 temp.dir=paste(data.dir,"Temporary data",sep="/")
 tidy.dir=paste(data.dir,"Tidy data",sep="/")
+error.dir=paste(data.dir,"Errors to check",sep="/")
 
 # Load metadata ----
 setwd(temp.dir)
@@ -78,26 +79,26 @@ schools<-length%>%
   filter(number>1)%>%
   glimpse() # Do we have schools? YES, if no schools will be empty
 
-
 # Standardise for RANGE and Error for Length ----
 # To standardise for RANGE and Error we can remove any length observations outside Range and Error rules
 # i.e. the length data, and any abundance calculated from it, will be restricted by range
-
 summary(length$range) # shows min, mean and max range
 out.of.range<-filter(length,range>10000)%>%glimpse() ## In this example there are no fish out of range (empty dataframe)
 
 # Check on the BIG fish length data----
 fish.greater.than.1.meter<-filter(length,length>1000)%>%
+  select(campaignid,sample,family,genus,species,length)%>%
   glimpse() # Shows fish that have a length measurement greater than 1 m (usually sharks, but should be checked, but will come out again if larger than the max length in the life history sheet)
 
 # Create google sheet for checking errors ----
-errors <- gs_new(paste(study,"errors",sep="."), ws_title = "fish.greater.than.1.meter",input=fish.greater.than.1.meter, trim = TRUE, verbose = FALSE)
+#errors <- gs_new(paste(study,"errors",sep="."), ws_title = "fish.greater.than.1.meter",input=fish.greater.than.1.meter, trim = TRUE, verbose = FALSE)
 
 # Use this line instead if you have already ran through the script ----
-errors <- gs_title(paste(study,"errors",sep="."))
+#errors <- gs_title(paste(study,"errors",sep="."))
 
-#setwd(temp.dir)
-#write.csv(fish.greater.than.1.meter,file=paste(study,"check","length.greater.than.1.meter.csv",sep = "_"), row.names=FALSE)
+# For CSV report
+setwd(error.dir)
+write.csv(fish.greater.than.1.meter,file=paste(study,"length.greater.than.1.meter.csv",sep = "_"), row.names=FALSE)
 
 # Plot to visualise length data ----
 setwd(plots.dir)
@@ -133,7 +134,6 @@ ggsave(check.range.vs.length,file=paste(study,"check.range.vs.length.png",sep = 
 # Read in species list to compare against----
 # PLEASE EMAIL brooke.gibbons@uwa.edu.au if you would like this googlesheet to be shared with you
 # or substitute your own life history sheet in here
-
 master<-gs_title("Australia.life.history")%>%
   gs_read_csv(ws = "australia.life.history")%>%clean_names()%>%
   filter(grepl('Australia', global.region))%>% # Change country here
@@ -168,30 +168,36 @@ length<-left_join(length,synonyms,by=c("family","genus","species"))%>%
   select(-c(family_correct,genus_correct,species_correct))
 
 # Check for taxa.not.match----
-setwd(temp.dir)
-
 # MaxN
 maxn.taxa.not.match.life.history<-master%>%
   anti_join(maxn,.,by=c("family","genus","species"))%>%
-  distinct(sample,family,genus,species)%>%
-  filter(!species%in%c("spp","sp10","sp1"))
+  distinct(campaignid,sample,family,genus,species)%>%
+  filter(!species%in%c("spp","sp10","sp1"))%>%
+  glimpse()
 
-errors <- errors%>%
-  gs_ws_new(ws_title = "maxn.taxa.not.match.life.history", input = maxn.taxa.not.match.life.history,
-            trim = TRUE, verbose = FALSE)
+# For Google sheet report
+#errors <- errors%>%
+#  gs_ws_new(ws_title = "maxn.taxa.not.match.life.history", input = maxn.taxa.not.match.life.history,
+#            trim = TRUE, verbose = FALSE)
 
-#write.csv(maxn.taxa.not.match.life.history,file=paste(study,"check.maxn.taxa.not.match.life.history","csv",sep = "_"), row.names=FALSE)
+# For CSV report
+setwd(error.dir)
+write.csv(maxn.taxa.not.match.life.history,file=paste(study,"maxn.taxa.not.match.life.history.csv",sep = "_"), row.names=FALSE)
 
 # Length 
 length.taxa.not.match<-master%>%
   anti_join(length,.,by=c("family","genus","species"))%>%
-  dplyr::distinct(sample,family,genus,species)%>%
+  dplyr::distinct(campaignid,sample,family,genus,species)%>%
   filter(!species%in%c("spp","sp10","sp1"))
 
-#write.csv(length.taxa.not.match,file=paste(study,"check.length.taxa.not.match.life.history","csv",sep = "_"), row.names=FALSE)
-errors <- errors%>%
-  gs_ws_new(ws_title = "length.taxa.not.match.life.history", input = length.taxa.not.match,
-            trim = TRUE, verbose = FALSE)
+# For Google sheet report
+# errors <- errors%>%
+#   gs_ws_new(ws_title = "length.taxa.not.match.life.history", input = length.taxa.not.match,
+#             trim = TRUE, verbose = FALSE)
+
+# For CSV report
+setwd(error.dir)
+write.csv(length.taxa.not.match,file=paste(study,"length.taxa.not.match.life.history.csv",sep = "_"), row.names=FALSE)
 
 ### SERIOUS Check for Min Max Length compared to Master list----
 library(plyr)
@@ -213,15 +219,19 @@ master.with.fam.max<-left_join(master,family.max.length,by=c("family"))%>%
 
 wrong.length.taxa<-left_join(length,master.with.fam.max,by=c("family","genus","species"))%>%
   dplyr::filter(length >= fb.length_max)%>%
-  dplyr::select(sample,family,genus,species,length,fb.length_max,fb.ltypemaxm)%>%
+  dplyr::select(campaignid,sample,family,genus,species,length,fb.length_max,fb.ltypemaxm)%>%
   dplyr::mutate(percent.error=(length-fb.length_max)/fb.length_max*100)%>%
-  dplyr::arrange(desc(percent.error))
+  dplyr::arrange(desc(percent.error))%>%
+  glimpse()
 
-# setwd(temp.dir)
-# write.csv(wrong.length.taxa,file=paste(study,"check.wrong.length.taxa.vs.life.history.csv",sep = "_"), row.names=FALSE)
-errors <- errors%>%
-  gs_ws_new(ws_title = "wrong.length.taxa", input = wrong.length.taxa,
-            trim = TRUE, verbose = FALSE)
+# For CSV report
+setwd(error.dir)
+write.csv(wrong.length.taxa,file=paste(study,"check.wrong.length.taxa.vs.life.history.csv",sep = "_"), row.names=FALSE)
+
+# For Google sheet report
+# errors <- errors%>%
+#   gs_ws_new(ws_title = "wrong.length.taxa", input = wrong.length.taxa,
+#             trim = TRUE, verbose = FALSE)
 
 ## Drop wrong lengths ----
 drop.length<-wrong.length.taxa%>% # TO REMOVE LENGTHS OUTSIDE THE MIN/MAX OF MASTER LIST
@@ -238,25 +248,33 @@ length<-length%>%
 
 # Check how many MaxN per species are missing from StereoMaxN, e.g. how many lengths are missing from the possible MaxN ----
 # can only look at samples where lengths were possible
-length.sample <- length%>%distinct(sample)
+length.sample <- length%>%distinct(campaignid,sample)
 
-# summairse length and then compare to maxn
+# summarise length and then compare to maxn
 taxa.maxn.vs.stereo.summary<-length%>%
-  group_by(sample,family,genus,species)%>%
+  group_by(campaignid,sample,family,genus,species)%>%
   dplyr::summarise(stereo.maxn=sum(number))%>%
   left_join(maxn)%>%
-  mutate(percent.diff = (maxn-stereo.maxn)/maxn)%>%
+  mutate(percent.difference = (maxn-stereo.maxn)/maxn*100)%>%
   semi_join(length.sample)%>% # only keep ones where length was possible
-  replace_na(list(percent.diff=1))%>%
-  filter(!percent.diff%in%c(0))%>%
-  select(project,campaignid,sample,family,genus,species,maxn,stereo.maxn,percent.diff,frame)%>%
+  replace_na(list(percent.difference=1))%>%
+  filter(!percent.difference%in%c(0))%>%
+  mutate(difference=(maxn-stereo.maxn))%>%
+  mutate(difference=abs(difference))%>%
+  mutate(percent.difference=abs(percent.difference))%>%
+  select(project,campaignid,sample,family,genus,species,maxn,stereo.maxn,difference,percent.difference,frame)%>%
+  arrange(-difference)%>%
   glimpse()
 
-#write.csv(taxa.maxn.vs.stereo.summary,file=paste(study,"taxa.maxn.vs.stereo.summary.csv",sep = "_"), row.names=FALSE)
-errors <- errors%>%
-  gs_ws_delete(ws = "taxa.maxn.vs.stereo.summary") %>% 
-  gs_ws_new(ws_title = "taxa.maxn.vs.stereo.summary", input = taxa.maxn.vs.stereo.summary,
-            trim = TRUE, verbose = FALSE)
+# For CSV report
+setwd(error.dir)
+write.csv(taxa.maxn.vs.stereo.summary,file=paste(study,"taxa.maxn.vs.stereo.summary.csv",sep = "_"), row.names=FALSE)
+
+# For Google Sheet report
+# errors <- errors%>%
+#   gs_ws_delete(ws = "taxa.maxn.vs.stereo.summary") %>% 
+#   gs_ws_new(ws_title = "taxa.maxn.vs.stereo.summary", input = taxa.maxn.vs.stereo.summary,
+#             trim = TRUE, verbose = FALSE)
 
 # WRITE FINAL checked data----
 setwd(tidy.dir)

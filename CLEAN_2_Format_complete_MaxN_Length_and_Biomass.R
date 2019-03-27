@@ -20,6 +20,7 @@ rm(list=ls())
 
 # Libraries required ----
 library(tidyr)
+
 library(dplyr)
 library(ggplot2)
 library(googlesheets)
@@ -65,11 +66,6 @@ dat<-read_csv(file=paste(study,"checked.maxn.csv",sep = "_"),na = c("", " "))%>%
   dplyr::select(sample,scientific,maxn)%>%
   spread(scientific,maxn, fill = 0)%>%
   glimpse()
-
-# Presence.Absence <- dat[,2:(ncol(dat))-1]
-# for (i in 1:dim(Presence.Absence)[2]){
-#   Presence.Absence[,i] <- ifelse(Presence.Absence[,i]>0,1,0)
-# }
 
 complete.maxn<-dat%>%
   gather(key=scientific, value = maxn,-sample)%>%
@@ -178,14 +174,13 @@ top.mass<- complete.length.number.mass %>%
   mutate(mean.kg=round(mean.kg,digits=3))%>%
   mutate(max.kg=round(max.kg,digits=3))%>%
   mutate(min.kg=round(min.kg,digits=3))%>%
-  mutate(mean.length=round(mean.length,digits=2))
+  mutate(mean.length=round(mean.length,digits=2))%>%
+  glimpse()
 
 # WRITE FINAL complete and expanded data----
 setwd(tidy.dir)
 dir()
 
 write.csv(complete.maxn, file=paste(study,"complete.maxn.csv",sep = "_"), row.names=FALSE)
-
 write.csv(complete.length.number.mass, file=paste(study,"complete.length.number.mass.csv",sep = "_"), row.names=FALSE)
-
 write.csv(complete.length.number, file=paste(study,"complete.length.number.csv",sep = "_"), row.names=FALSE)
