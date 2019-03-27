@@ -16,7 +16,7 @@ library(GlobalArchive)
 library(R.utils)
 
 # Study name ---
-study<-"example.data.types"
+study<-"workgroup.example"
 
 ### Set your working directory ----
 working.dir<-("C:/GitHub/globalarchive-query")

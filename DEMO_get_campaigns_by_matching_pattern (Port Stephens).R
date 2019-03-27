@@ -16,7 +16,7 @@ library(stringr)
 library(tidyr)
 
 ### Study name ---
-study<-"example.pattern"
+study<-"pattern.example"
 
 ### Set your working directory ----
 working.dir<-("C:/GitHub/globalarchive-query")
