@@ -36,8 +36,7 @@ dir.create(file.path(data.dir, "Tidy data"))
 dir.create(file.path(data.dir, "Temporary data"))
 
 # Bring in some consistent values used to download ----
-setwd(working.dir)
-source("values.R") 
+source("https://raw.githubusercontent.com/GlobalArchiveManual/globalarchive-query/master/values.R")
 
 ### Setup your query ----
 # API
