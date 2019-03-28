@@ -41,7 +41,7 @@ source("values.R")
 
 ### Setup your query ----
 # API
-API_USER_TOKEN <- "b581a9ed9a2794010dd5edb4d68f214a81990d1645c4e3ad4caad0dd"
+API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 
 # API search by Project (space replaced with +) ----
 q='{"filters":[{"name":"project","op":"has","val":{"name":"name","op":"eq","val":"Pilbara+Marine+Conservation+Partnership"}}]}'
@@ -124,8 +124,7 @@ info<-info.join%>%
   select(project,campaignid,name,value)%>%
   spread(.,name,value)
 
-
-unique(metadata$campaignid)
+unique(metadata$campaignid)%>%sort()
 unique(info$campaignid)
 
 ## Save maxn and length files ----

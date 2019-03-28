@@ -22,16 +22,18 @@ study<-"pattern.example"
 working.dir<-("C:/GitHub/globalarchive-query")
 
 ## Save directory names ----
-download.dir<-paste(working.dir,"Downloads",sep="/")
-tidy.dir<-paste(working.dir,"Data/Tidy data",sep="/")
-
-unlink(download.dir, recursive=TRUE) # Clear downloads folder (this will delete everything in the downloads folder (very scary))
-
-## Create a folder for downloaded data and tidy data ----
 data.dir=paste(working.dir,"Data",sep="/")
 download.dir<-paste(working.dir,"Downloads",sep="/")
 temp.dir=paste(data.dir,"Temporary data",sep="/")
 tidy.dir=paste(data.dir,"Tidy data",sep="/")
+
+unlink(download.dir, recursive=TRUE) # Clear downloads folder (this will delete everything in the downloads folder (very scary))
+
+## Create a folder for downloaded data and tidy data ----
+dir.create(file.path(working.dir, "Downloads"))
+dir.create(file.path(working.dir, "Data"))
+dir.create(file.path(data.dir, "Tidy data"))
+dir.create(file.path(data.dir, "Temporary data"))
 
 # Bring in some consistent values used to download ----
 setwd(working.dir)

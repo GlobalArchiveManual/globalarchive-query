@@ -1,39 +1,48 @@
 rm(list=ls()) # Clear memory
 
+# libraries ----
+library(devtools)
+library(dplyr)
+install_github("UWAMEGFisheries/GlobalArchive")
+library(GlobalArchive)
 library(httr)
 library(jsonlite)
-library(RCurl)
-library(dplyr)
-library(purrr)
-library(readr)
-library(tidyr)
-library(stringr)
 library(plyr)
+library(purrr)
+library(RCurl)
+library(readr)
+library(R.utils)
+library(stringr)
+library(tidyr)
 
-### Source functions----
-galib <- getURL("https://raw.githubusercontent.com/UWAMEGFisheries/globalarchive-api/master/R/galib.R", ssl.verifypeer = FALSE)
-eval(parse(text = galib))
-
-functions <-getURL("https://raw.githubusercontent.com/GlobalArchiveManual/globalarchive-query/master/Functions.R", ssl.verifypeer = FALSE)
-eval(parse(text = functions))
+### Study name ---
+study<-"lobster.example"
 
 ### Set your working directory ----
-work.dir<-"C:/GitHub/BIOL4408"
-setwd(work.dir)
+working.dir<-"C:/GitHub/BIOL4408"
+setwd(working.dir)
 
 ## Save directory names ----
-download.dir<-paste(work.dir,"Downloads",sep="/")
-tidy.dir<-paste(work.dir,"Tidy data",sep="/")
+data.dir=paste(working.dir,"Data",sep="/")
+download.dir<-paste(working.dir,"Downloads",sep="/")
+temp.dir=paste(data.dir,"Temporary data",sep="/")
+tidy.dir=paste(data.dir,"Tidy data",sep="/")
+
+unlink(download.dir, recursive=TRUE) # Clear downloads folder (this will delete everything in the downloads folder (very scary))
+
+## Create a folder for downloaded data and tidy data ----
+dir.create(file.path(working.dir, "Downloads"))
+dir.create(file.path(working.dir, "Data"))
+dir.create(file.path(data.dir, "Tidy data"))
+dir.create(file.path(data.dir, "Temporary data"))
+
+# Bring in some consistent values used to download ----
+setwd(working.dir)
+source("values.R") 
 
 ### Setup your query ----
 # API
 API_USER_TOKEN <- "fba67680725035ebaf72e60db290933dc878454e2dd8506ec75085b1"
-
-# This is the location where the downloaded data will sit ----
-DATA_DIR <- download.dir
-
-# Configure search pattern for downloading all files ----
-MATCH_FILES <- ".csv$|.txt$"
 
 # API search by Project (space replaced with +) ----
 q='{"filters":[{"name":"project","op":"has","val":{"name":"name","op":"eq","val":"BIOL4408+Marine+Ecology+field+trip"}}]}'
@@ -42,26 +51,17 @@ q='{"filters":[{"name":"project","op":"has","val":{"name":"name","op":"eq","val"
 nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
 
 ## Metadata files ----
-metadata <-list.files(path=download.dir,
-                      recursive=T,
-                      pattern="Metadata.csv",
-                      full.names=T) %>% 
+metadata <-list.files.GA("Metadata.csv")%>%
   map_df(~read_files_csv(.))%>%
   glimpse()
 
 ## Count fles ----
-count <-list.files(path=download.dir,
-                   recursive=T,
-                   pattern="Count.csv",
-                   full.names=T) %>% 
+count <-list.files.GA("Count.csv")%>%
   map_df(~read_files_csv(.))%>%
   glimpse()
 
 ## Length files ----
-length <-list.files(path=download.dir,
-                    recursive=T,
-                    pattern="Length.csv",
-                    full.names=T) %>% 
+length <-list.files.GA("Length.csv")%>%
   map_df(~read_files_csv(.))%>%
   glimpse()
 
@@ -72,4 +72,6 @@ dat<-as.data.frame(count)%>%
 
 ## Save maxn and length files ----
 setwd(tidy.dir)
-write.csv(maxn,paste(name,"maxn.csv",sep="_"),row.names = FALSE)
+write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
+write.csv(count,paste(study,"count.csv",sep="_"),row.names = FALSE)
+write.csv(length,paste(study,"length.csv",sep="_"),row.names = FALSE)

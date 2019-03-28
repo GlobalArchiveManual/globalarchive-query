@@ -22,16 +22,18 @@ study<-"workgroup.example"
 working.dir<-("C:/GitHub/globalarchive-query")
 
 ## Save directory names ----
-download.dir<-paste(working.dir,"Downloads",sep="/")
-tidy.dir<-paste(working.dir,"Data/Tidy data",sep="/")
-
-unlink(download.dir, recursive=TRUE) # Clear downloads folder (this will delete everything in the downloads folder (very scary)), DO NOT save anything in this file that is not downloaded using the query as it will be deleted and is not recoverable
-
-## Create a folder for downloaded data and tidy data ----
 data.dir=paste(working.dir,"Data",sep="/")
 download.dir<-paste(working.dir,"Downloads",sep="/")
 temp.dir=paste(data.dir,"Temporary data",sep="/")
 tidy.dir=paste(data.dir,"Tidy data",sep="/")
+
+unlink(download.dir, recursive=TRUE) # Clear downloads folder (this will delete everything in the downloads folder (very scary))
+
+## Create a folder for downloaded data and tidy data ----
+dir.create(file.path(working.dir, "Downloads"))
+dir.create(file.path(working.dir, "Data"))
+dir.create(file.path(data.dir, "Tidy data"))
+dir.create(file.path(data.dir, "Temporary data"))
 
 # Bring in some consistent values used to download ----
 setwd(working.dir)
@@ -39,7 +41,7 @@ source("values.R")
 
 ### Setup your query ----
 # API
-API_USER_TOKEN <- "b581a9ed9a2794010dd5edb4d68f214a81990d1645c4e3ad4caad0dd"
+API_USER_TOKEN <- ""
 
 # API search by Collaboration/Workgroup (space replaced with +) ----
 q='{"filters":[{"name":"workgroups","op":"any","val":{"name":"name","op":"eq","val":"Example:+merging+different+data+types"}}]}'
