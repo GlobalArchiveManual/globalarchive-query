@@ -1,8 +1,8 @@
 {
-    "path" : "C:/GitHub/globalarchive-query",
+    "path" : "C:/GitHub/globalarchive-query/Errors to check",
     "sortOrder" : [
         {
-            "ascending" : true,
+            "ascending" : false,
             "columnIndex" : 2
         }
     ]
