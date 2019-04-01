@@ -74,7 +74,7 @@ API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 # In this example we are searching for a WORKGROUP called "Example: merging different data types"
 # NOTE: change spaces in the project name to '+'
 
-q='{"filters":[{"name":"workgroups","op":"any","val":{"name":"name","op":"eq","val":"Example:+merging+different+data+types"}}]}'
+q<-query.workgroup("Example:+merging+different+data+types")
 
 ## Download data ----
 # Run the next line to start downloading the files matching the search above
