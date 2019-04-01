@@ -2,9 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
-
 /Downloads
 /Plots
 /Tidy data
 /Errors to check
 /Staging
+.DS_Store
