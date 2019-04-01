@@ -1,6 +1,6 @@
 
 
-# Secure access to Campaigns, Projects and Collaborations within GlobalArchive
+# Secure access to EventMeasure stereo-video annotations from Campaigns, Projects and Collaborations within GlobalArchive
 
 # 1. use an API token to access Projects and Collaborations shared with you.
 # 2. securely download any number of Campaigns within a Project
