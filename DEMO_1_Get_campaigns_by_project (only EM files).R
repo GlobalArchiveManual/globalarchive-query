@@ -1,19 +1,21 @@
 
+# Secure access to EventMeasure or generic stereo-video annotations from Campaigns, Projects and Collaborations within GlobalArchive
 
-# Secure access to EventMeasure stereo-video annotations from Campaigns, Projects and Collaborations within GlobalArchive
-
+### OBJECTIVES ###
 # 1. use an API token to access Projects and Collaborations shared with you.
 # 2. securely download any number of Campaigns within a Project
 # 3. combine multiple Campaigns into single Metadata, MaxN and Length files for subsequent validation and data analysis.
+
+### Please forward any updates and improvements to tim.langlois@uwa.edu.au & brooke.gibbons@uwa.edu.au or raise an issue in the "globalarchive-query" GitHub repository
 
 
 rm(list=ls()) # Clear memory
 
 ## Load Libraries ----
-library(devtools)
-install_github("UWAMEGFisheries/GlobalArchive") # will not re-install if it hasn't been updated since last install
-library(GlobalArchive)
 # To connect to GlobalArchive
+library(devtools)
+install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
+library(GlobalArchive)
 library(httr)
 library(jsonlite)
 library(R.utils)
@@ -64,6 +66,7 @@ tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 # This avoids doubling up GlobalArchive files, or including files from other Projects.
 setwd(working.dir)
 unlink(download.dir, recursive=TRUE) 
+
 
 ## Create Downloads, Staging and Tidy data folders ----
 dir.create(file.path(working.dir, "Downloads"))
