@@ -43,9 +43,9 @@ study<-"project.example"
 
 # The 'Downloads' folder saves files downloaded from GlobalArchive.
 
-# The 'Staging' folder is used to save the combined files (e.g. metadata, maxn or length) NOTE: These initial outputs have not gone through any     validation steps (e.g. any of the checks against the life-history sheet)
+# The 'Staging' folder is used to save the combined files (e.g. metadata, maxn or length) NOTE: These initial outputs have not gone through any check (e.g. checks against the life-history sheet)
 
-# **The only folder you will need to create outside of R is your working directory**
+# **The only folder you will need to create is your working directory**
 
 ## Set your working directory ----
 working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory of current file - or type your own
@@ -77,7 +77,8 @@ dir.create(file.path(working.dir, "Tidy data"))
 
 ## Query from GlobalArchive----
 # Load default values from GlobalArchive ----
-source("https://raw.githubusercontent.com/GlobalArchiveManual/globalarchive-query/master/values.R")
+source("https://raw.githubusercontent.com/UWAMEGFisheries/GlobalArchive/master/values.R")
+
 
 # An API token allows R to communicate with GlobalArchive
 
