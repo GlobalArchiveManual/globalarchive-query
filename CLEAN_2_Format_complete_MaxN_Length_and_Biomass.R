@@ -1,61 +1,74 @@
-### Make complete.maxn and complete.length.number.mass data from Checked.maxn and Checked.length data created from EventMeasure data ###
+
+### Make complete.maxn and complete.length.number.mass data from Checked.maxn and Checked.length data created from EventMeasure or generic stereo-video annotations via GlobalArchive ###
 ### Written by Tim Langlois, adpated and edited by Brooke Gibbons
 
-### Please forward any updates and improvements to timothy.langlois@uwa.edu.au & brooke.gibbons@uwa.edu.au 
-### or make a pull request on the GitHub repository "Format-EventMeasure-database-outputs"
 
 ### OBJECTIVES ###
 # 1. Import checked data
 # 2. Make factors
-# 3. Make complete.maxn data -  PeriodTime will represent the first PeriodTime of MaxN if PeriodTime has been set to zero at Time os Seabed in EM.
-# a. useful for abundance metrics - that do not account for body size or range/sample unit size
-# 4. Make complete.length.number.mass data:
-# a. useful for calculating abundance/mass based on length rules - and that account for range/sample unit size
-# b. useful for length analyses (e.g. mean length, KDE, histograms) - after expansion
-# 5. Make mass estimates from Length using a and b from Master list
+# 3. Make complete.maxn long.format data with zeros filled in:
+      ## PeriodTime will represent the first PeriodTime of MaxN if PeriodTime has been set to zero at Time on Seabed in EM.
+      ## complete.maxn data is useful for species and abundance metrics - that do not account for body size or range/sample unit size
+# 4. Make complete.length.number.mass data with zeros filled in:
+      ## useful for calculating abundance/mass based on length rules (e.g. greater than legal)
+      ## useful for controling for range/sample unit size
+      ## useful for length analyses (e.g. mean length, KDE, histograms) - after expansion by number of lengths per sample per species - see example below
+# 5. Make mass estimates from Length using a and b from life.history
 # 6. Write complete data sets for further analysis
+
+
+### Please forward any updates and improvements to tim.langlois@uwa.edu.au & brooke.gibbons@uwa.edu.au or raise an issue in the "globalarchive-query" GitHub repository
+
 
 # Clear memory ----
 rm(list=ls())
 
+
+
 # Libraries required ----
-library(tidyr)
-library(dplyr)
-library(ggplot2)
-library(googlesheets)
-library(readr)
-library(httpuv)
-library(stringr)
+# To connect to GlobalArchive
+library(devtools)
+install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
 library(GlobalArchive)
+# To connect to life.history
+library(httpuv)
+library(googlesheets)
+# To tidy data
+library(tidyr)
+library(plyr)
+library(dplyr)
+library(stringr)
+library(readr)
+library(ggplot2)
 
 # Study name---
 study<-"project.example" ## change for your project
 
-# Set working directory ----
-working.dir<-("C:/GitHub/globalarchive-query")
 
-# Set sub directories----
+
+## Set your working directory ----
+working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory of current file - or type your own
+
+## Save these directory names to use later----
+staging.dir<-paste(working.dir,"Staging",sep="/") 
+download.dir<-paste(working.dir,"Downloads",sep="/")
+tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 plots.dir=paste(working.dir,"Plots",sep="/")
-data.dir=paste(working.dir,"Data",sep="/")
-export.dir=paste(data.dir,"Database output",sep="/")
-temp.dir=paste(data.dir,"Temporary data",sep="/")
-tidy.dir=paste(data.dir,"Tidy data",sep="/")
+error.dir=paste(working.dir,"Errors to check",sep="/")
+
 
 # Read in the data----
 setwd(tidy.dir)
 dir()
 
-# Make species families to merge back in after data is complete -----
-maxn.families<-read_csv(file=paste(study,"checked.maxn.csv",sep = "_"),na = c("", " "))%>%
-  mutate(scientific=paste(family,genus,species,sep=" "))%>%
-  filter(!(family=="Unknown"))%>%
-  select(c(family,genus,species,scientific))%>%
-  distinct() #to join back in after complete
+# Read in metadata----
+metadata<-read_csv(file=paste(study,"checked.metadata.csv",sep = "."),na = c("", " "))%>%
+  glimpse()
 
-# Make complete.maxn from maxn and complete.length.number.mass from length3D----
-# Make complete.maxn: fill in 0, make Total and Species Richness and join in factors----
-dat<-read_csv(file=paste(study,"checked.maxn.csv",sep = "_"),na = c("", " "))%>%
-  select(c(sample,family,genus,species,maxn))%>%
+
+# Make complete.maxn: fill in 0 and join in factors----
+dat<-read_csv(file=paste(study,"checked.maxn.csv",sep = "."),na = c("", " "))%>%
+  dplyr::select(c(sample,family,genus,species,maxn))%>%
   complete(sample,nesting(family,genus,species)) %>%
   replace_na(list(maxn = 0))%>%
   group_by(sample,family,genus,species)%>%
@@ -63,36 +76,49 @@ dat<-read_csv(file=paste(study,"checked.maxn.csv",sep = "_"),na = c("", " "))%>%
   ungroup()%>% #always a good idea to ungroup() after you have finished using the group_by()!
   mutate(scientific=paste(family,genus,species,sep=" "))%>%
   dplyr::select(sample,scientific,maxn)%>%
-  spread(scientific,maxn, fill = 0)%>%
+  spread(scientific,maxn, fill = 0)%>% #why do we need this?
   glimpse()
 
+# Make family, genus and species names to merge back in after data is complete ---
+maxn.families<-read_csv(file=paste(study,"checked.maxn.csv",sep = "."),na = c("", " "))%>%
+  mutate(scientific=paste(family,genus,species,sep=" "))%>%
+  filter(!(family=="Unknown"))%>%
+  dplyr::select(c(family,genus,species,scientific))%>%
+  distinct()%>% #to join back in after complete
+  glimpse()
+
+# Make complete data and join with metadata
 complete.maxn<-dat%>%
   gather(key=scientific, value = maxn,-sample)%>%
-  data.frame()%>%
   inner_join(maxn.families,by=c("scientific"))%>%
+  inner_join(metadata)%>% #Joining metadata will use a lot of memory - # out if you need too
   glimpse()
 
+
+
 # Make complete.length.number.mass: fill in 0 and join in factors----
-# This data is useful for calculating abundance based on length rules--
-length.families<-read_csv(file=paste(study,"checked.length.csv",sep = "_"),na = c("", " "))%>%
+
+length.families<-read_csv(file=paste(study,"checked.length.csv",sep = "."),na = c("", " "))%>%
   filter(!(family=="Unknown"))%>%
   select(family,genus,species)%>%
   distinct()%>% #to join back in after complete
   glimpse()
 
-complete.length.number<-read_csv(file=paste(study,"checked.length.csv",sep = "_"))%>% #na = c("", " "))
-  filter(!(family=="Unknown"))%>%
+complete.length.number<-read_csv(file=paste(study,"checked.length.csv",sep = "."))%>% #na = c("", " "))
+  filter(!family=="Unknown")%>%
   dplyr::select(sample,family,genus,species,length,number,range)%>%
   complete(sample,nesting(family,genus,species)) %>%
   replace_na(list(number = 0))%>% #we add in zeros - in case we want to calulate abundance of species based on a length rule (e.g. greater than legal size)
   ungroup()%>%
   filter(!is.na(number))%>% #this should not do anything
   mutate(length=as.numeric(length))%>%
-  data.frame()%>%
   glimpse()
 
-# MAKE mass data from number.length.complete----
-# Import master from Life-history-
+
+
+# Make mass data from complete.length.number----
+# There are 6 steps
+# 1. use life.history---
 master<-gs_title("Australia.life.history")%>%
   gs_read_csv(ws = "australia.life.history")%>%clean_names()%>%
   filter(grepl('Australia', global.region))%>%
@@ -105,28 +131,30 @@ master<-gs_title("Australia.life.history")%>%
   distinct()%>%
   glimpse()
 
-## Biomass ---
-# Check for species missing length weight relationship ----
+# 2. Check for missing length weight relationship ---
 taxa.missing.lw <- complete.length.number%>%
   distinct(family,genus,species)%>%
   anti_join(filter(master,!is.na(a)), by=c("family","genus","species"))%>%
-  glimpse() # 8 missing - all spp's
+  glimpse()
 
-# Missing Genus length weight ----
+# Missing Genus length weight ---
 genus.missing.lw <- complete.length.number%>%
   distinct(genus)%>%
-  anti_join(filter(master,!is.na(a)), by="genus") # 1 (Unknown)
+  anti_join(filter(master,!is.na(a)), by="genus")%>%
+  glimpse()
 
 # Missing Family length weight ----
 family.missing.lw <- complete.length.number%>%
   distinct(family)%>%
-  anti_join(filter(master,!is.na(a)), by="family") # None
+  anti_join(filter(master,!is.na(a)), by="family")%>%
+  glimpse()
 
-#4. Fill length data with relevant a and b and if blank use family?----
+#3. Fill length data with relevant a and b and if blank use family?---
 length.species.ab<-master%>% #done this way around to avoid duplicating Family coloum
   select(-family)%>%
   inner_join(complete.length.number,., by=c("genus","species")) # only keeps row if has a and b
 
+# 4. Make family length.weigth
 family.lw <- master%>%
   dplyr::group_by(family,length.measure)%>%
   dplyr::mutate(log.a = log10(a))%>%     
@@ -141,13 +169,14 @@ family.lw <- master%>%
   dplyr::mutate(bll=as.numeric(bll))%>%
   dplyr::mutate(rank = ifelse(length.measure=="FL",1,ifelse(length.measure=="TL", 2, 3)))%>%
   dplyr::mutate(min.rank = rank - min(rank, na.rm = TRUE))%>%
-  dplyr::filter(min.rank == 0)
+  dplyr::filter(min.rank == 0)%>%
+  glimpse()
 
 length.family.ab<-complete.length.number%>%
   anti_join(master, by=c("genus","species"))%>%
   left_join(family.lw, by="family")
 
-# 5. Fill length data with relevant a and b and if blank use family?----
+# 5. Fill length data with relevant a and b and if blank use family---
 complete.length.number.mass<-length.species.ab%>%
   bind_rows(length.family.ab)%>%
   dplyr::filter(!is.na(a))%>% #this gets rid of species with no lw
@@ -157,11 +186,28 @@ complete.length.number.mass<-length.species.ab%>%
   mutate(adjLength = ((length.cm*bll)+all)) %>% 
   mutate(mass.g = (adjLength^b)*a*number)%>%
   dplyr::select(c(sample,family,genus,species,length,range,number,mass.g,length.cm))%>%
+  inner_join(metadata)%>%
   glimpse()
 
+# 6. Checks of distribution and species estimates---
+# Check - distribution of mass.g
+setwd(plots.dir)
+ggplot(data=complete.length.number.mass, aes(as.numeric(mass.g))) +
+  geom_histogram(aes(y =..density..),
+                 col="red",
+                 fill="blue",
+                 alpha = .2)
+ggsave(file=paste(study,"check.mass.g.png",sep = "."))
 
-#5. Check the mass estimates across species - in kg's----
-top.mass<- complete.length.number.mass %>%
+# Check - length.cm vs. mass.g
+ggplot(data=complete.length.number.mass, aes(length.cm,mass.g)) +
+  geom_point(alpha=0.25)+
+  geom_smooth(alpha=0.05, se=FALSE)
+ggsave(file=paste(study,"check.length.cm.vs.mass.g.png",sep = "."))
+
+
+#Check the mass estimates across species - in kg's----
+check.mass<- complete.length.number.mass %>%
   dplyr::group_by(family,genus,species)%>%
   filter(mass.g>0)%>%
   dplyr::mutate(mass.kg.individual = (mass.g/number)/1000)%>% # Work out the mass per individual fish
@@ -174,12 +220,22 @@ top.mass<- complete.length.number.mass %>%
   mutate(max.kg=round(max.kg,digits=3))%>%
   mutate(min.kg=round(min.kg,digits=3))%>%
   mutate(mean.length=round(mean.length,digits=2))%>%
+  arrange(-mean.kg)%>%
   glimpse()
+setwd(error.dir)
+write.csv(check.mass,file=paste(study,"check.mass.csv",sep = "_"), row.names=FALSE)
+
+# CHECK these mass estimates before using them!!!
+
 
 # WRITE FINAL complete and expanded data----
 setwd(tidy.dir)
 dir()
 
-write.csv(complete.maxn, file=paste(study,"complete.maxn.csv",sep = "_"), row.names=FALSE)
-write.csv(complete.length.number.mass, file=paste(study,"complete.length.number.mass.csv",sep = "_"), row.names=FALSE)
-write.csv(complete.length.number, file=paste(study,"complete.length.number.csv",sep = "_"), row.names=FALSE)
+write.csv(complete.maxn, file=paste(study,"complete.maxn.csv",sep = "."), row.names=FALSE)
+
+write.csv(complete.length.number, file=paste(study,"complete.length.number.csv",sep = "."), row.names=FALSE)
+
+write.csv(complete.length.number.mass, file=paste(study,"complete.length.number.mass.csv",sep = "."), row.names=FALSE)
+
+

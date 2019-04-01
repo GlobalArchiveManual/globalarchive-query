@@ -1,5 +1,5 @@
 
-# Validation checks of MaxN and Length files created from EventMeasure or generic stereo-video annotations via GlobalArchive
+### Error checks of MaxN and Length files created from EventMeasure or generic stereo-video annotations via GlobalArchive
 
 ## This script is designed to be used interatively to suggest species name and length corrections that should be made to original EventMeasure (.EMObs) or generic annotation files AND for subsequent data analysis.
 
@@ -15,7 +15,7 @@
 
 ### Please forward any updates and improvements to tim.langlois@uwa.edu.au & brooke.gibbons@uwa.edu.au or raise an issue in the "globalarchive-query" GitHub repository
 
-# PLEASE EMAIL brooke.gibbons@uwa.edu.au if you would like the life.history or synonyms googlesheets to be shared with you or have your local species information added.
+# Please email tim.langlois@uwa.edu.au & brooke.gibbons@uwa.edu.au if you would like the life.history or synonyms googlesheets shared with you or have your local species information added.
 
 
 
@@ -308,7 +308,7 @@ length<-length%>%
 
 # CAUTION Remove taxa that don't match from the final data ----
 maxn<-anti_join(maxn,maxn.taxa.not.match.life.history)
-length<-anti_join(maxn,length.taxa.not.match)
+length<-anti_join(length,length.taxa.not.match)
 
 # CAUTION Drop wrong lengths ----
 drop.length<-wrong.length.taxa%>% # TO REMOVE LENGTHS OUTSIDE THE MIN/MAX OF MASTER LIST
@@ -326,6 +326,7 @@ length<-length%>%
 # WRITE FINAL checked data----
 setwd(tidy.dir)
 dir()
+write.csv(metadata, file=paste(study,"checked.metadata.csv",sep = "."), row.names=FALSE)
 write.csv(maxn, file=paste(study,"checked.maxn.csv",sep = "."), row.names=FALSE)
 write.csv(length, file=paste(study,"checked.length.csv",sep = "."), row.names=FALSE)
 

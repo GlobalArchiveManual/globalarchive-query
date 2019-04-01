@@ -1,5 +1,5 @@
 
-# Secure access to EventMeasure or generic stereo-video annotations from Campaigns, Projects and Collaborations within GlobalArchive
+### Secure access to EventMeasure or generic stereo-video annotations from Campaigns, Projects and Collaborations within GlobalArchive
 
 ### OBJECTIVES ###
 # 1. use an API token to access Projects and Collaborations shared with you.
