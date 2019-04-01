@@ -216,7 +216,7 @@ synonyms <- gs_title("Synonyms_Australia")%>%
 # Use return.changes=T to view the taxa.replaced.by.synonym in R
 # Use save.report to save .csv file in your error directory
 maxn<-change.synonyms(maxn,return.changes=T,save.report = T)
-length1<-change.synonyms(length,return.changes=T,save.report = T)
+length<-change.synonyms(length,return.changes=T,save.report = T)
 
 # Check for taxa that do not have a match in the life history sheet ----
 maxn.taxa.not.match.life.history<-master%>%

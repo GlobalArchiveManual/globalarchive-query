@@ -60,7 +60,7 @@ source("https://raw.githubusercontent.com/GlobalArchiveManual/globalarchive-quer
 
 # Finding your API
 # 1. Go to GlobalArchive and login.
-# 2. On the front page Click 'Data.
+# 2. On the front page Click 'Data'.
 # 3. In the top right corner click on your name, then 'API token'
 # 4. Generate an API token and copy it.
 # 5. Paste it below
@@ -84,7 +84,7 @@ nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
 
 # Combine all downloaded data together ----
 # Your data is now downloaded into many folders within the 'Downloads' folder. (You can open File Explorer or use the Files Pane to check)
-# The below code will go into each of these folder and find all files that have the same ending (e.g. "_Metadata.csv") and bind them together.
+# The below code will go into each of these folders and find all files that have the same ending (e.g. "_Metadata.csv") and bind them together.
 # The end product is three data frames; metadata, maxn and length.
 
 ## Metadata files ----
@@ -148,7 +148,7 @@ length3dpoints<-lengths%>%
 ## Combine "Campaign Information" ----
 # Combine extra information fields saved on GlobalArchive e.g. Sampling Method, Image Analysis Method, etc...
 
-uniq.campaign <- unique(unlist(metadata$campaignid)) # Use metadata to make a list to re-save info with campagn name 
+uniq.campaign <- unique(unlist(metadata$campaignid)) # Use metadata to make a list to re-save info with campaign name 
 
 info.join<- data.frame()%>% # create a blank dataframe with campaignid and project
   c("campaignid","project")%>%
