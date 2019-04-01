@@ -1,7 +1,11 @@
 # Download data using GlobalArchive query
-This repository holds two scripts which demonstrate how to download data from GlobalArchive by <i>"Workgroup"</i> and by <i>"Project"</i>.
+This repository will holds scripts which demonstrate how to download data from GlobalArchive by <i>"Workgroup"</i> and by <i>"Project"</i>.
 
-NOTE: The <i>get_campaigns_by_project</i> example only uses campaigns that have been analysed using EventMeasure whereas the <i>get_campaigns_by_workgroup</i> example includes both EventMeasure and generic data.
+NOTE: The <i>get_campaigns_by_project</i> example only uses campaigns that have been analysed using EventMeasure whereas the <i>get_campaigns_by_workgroup</i> example will include both EventMeasure and generic data.
+
+# Check and format stereo-video data
+In addtion we have provide a script to CHECK MaxN and Length data against a life.history sheet AND a script to FORMAT data for further analysis, including adding in zeros where appropriate 
+
 
 ### Set your working directory
 Before running the script create the main folder where you will be working out of. You can do this in File Explorer or in the Files Pane in RStudio.
