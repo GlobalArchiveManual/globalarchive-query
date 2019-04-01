@@ -116,6 +116,27 @@ complete.length.number<-read_csv(file=paste(study,"checked.length.csv",sep = "."
 
 
 
+# Make the expanded length data----
+# For use in length analyses - i.e KDE or histograms
+expanded.length<-complete.length.number%>%
+  filter(!is.na(length))%>%
+  uncount(number)%>%
+  glimpse()
+
+setwd(plots.dir)
+ggplot(data=expanded.length, aes(as.numeric(length))) +
+  geom_histogram(aes(y =..density..),
+                 col="red",
+                 fill="blue",
+                 alpha = .2)
+ggsave(file=paste(study,"check.length.png",sep = "_"))
+
+ggplot(data=expanded.length, aes(y=as.numeric(length))) +
+  geom_boxplot(col="red",
+                 fill="blue",
+                 alpha = .2)
+
+
 # Make mass data from complete.length.number----
 # There are 6 steps
 # 1. use life.history---
@@ -235,6 +256,8 @@ dir()
 write.csv(complete.maxn, file=paste(study,"complete.maxn.csv",sep = "."), row.names=FALSE)
 
 write.csv(complete.length.number, file=paste(study,"complete.length.number.csv",sep = "."), row.names=FALSE)
+
+write.csv(expanded.length, file=paste(study,"expanded.length.csv",sep = "."), row.names=FALSE)
 
 write.csv(complete.length.number.mass, file=paste(study,"complete.length.number.mass.csv",sep = "."), row.names=FALSE)
 
