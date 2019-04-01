@@ -14,7 +14,7 @@ rm(list=ls()) # Clear memory
 ## Load Libraries ----
 # To connect to GlobalArchive
 library(devtools)
-install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
+# install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
 library(GlobalArchive)
 library(httr)
 library(jsonlite)
@@ -100,20 +100,19 @@ API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 # A number of example queries are given in the read me on the 'globalarchive-query' github repository.
 # See: https://github.com/GlobalArchiveManual/globalarchive-query
 
-# In this example we are searching for a PROJECT called "Pilbara Marine Conservation Partnership"
-# NOTE: change any spaces in the project name to '+'
-q=query.project("Pilbara+Marine+Conservation+Partnership")
-
 
 ## Download data ----
 # These files will be saved in the 'Downloads' folder within your working directory folder
-  
-ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
+
+# In this example we are searching for a PROJECT called "Pilbara Marine Conservation Partnership"
+# NOTE: change any spaces in the project name to '+'
+
+ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
+                     q=query.project("Pilbara+Marine+Conservation+Partnership"))
 
 
 
 # Combine all downloaded data----
-
 
 
 # Your data is now downloaded into many folders within the 'Downloads' folder. (You can open File Explorer or use the Files Pane to check)
