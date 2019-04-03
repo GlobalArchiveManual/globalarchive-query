@@ -1,139 +1,170 @@
+
+### Secure access to EventMeasure or generic stereo-video annotations from Campaigns, Projects and Collaborations within GlobalArchive
+
+### OBJECTIVES ###
+# 1. use an API token to access Projects and Collaborations shared with you.
+# 2. securely download any number of Campaigns within a Project
+# 3. combine multiple Campaigns into single Metadata, MaxN and Length files for subsequent validation and data analysis.
+
+### Please forward any updates and improvements to tim.langlois@uwa.edu.au & brooke.gibbons@uwa.edu.au or raise an issue in the "globalarchive-query" GitHub repository
+
+
 rm(list=ls()) # Clear memory
 
 ## Load Libraries ----
+# To connect to GlobalArchive
 library(devtools)
-install_github("UWAMEGFisheries/GlobalArchive") # will not re-install if it hasn't been updated since last install
+# install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
 library(GlobalArchive)
 library(httr)
 library(jsonlite)
+library(R.utils)
+# To connect to GitHub
+library(RCurl)
+# To tidy data
 library(plyr)
 library(dplyr)
-library(purrr)
-library(RCurl)
-library(readr)
-library(R.utils)
-library(stringr)
 library(tidyr)
+library(purrr)
+library(readr)
+library(stringr)
+
 
 ## Set Study Name ----
-study<-"pattern.example" # Change this to suit your study name. This will also be the prefix on your final saved files.
+# Change this to suit your study name. This will also be the prefix on your final saved files.
+study<-"project.example" 
 
-## File Structure ----
-# This script works out of one main folder (this is called your 'working directory')
-# There are three subfolders within the 'working directory'. They are 'Downloads','Data' and 'Tidy data'
-# The 'Downloads' folder is used to save the unaltered files downloaded from GlobalArchive.
-# The 'Data' folder is used to save the initial outputs from these scripts (e.g. the combined metadata files) NOTE: These initial outputs have not gone through any     validation steps (e.g. any of the checks against the life-history sheet)
 
-# **The only folder you will need to create outside of R is your working directory**
+
+## Folder Structure ----
+# This script uses one main folder ('working directory')
+
+# Three subfolders will be created within the 'working directory'. They are 'Downloads','Staging' and 'Tidy data'
+
+# The 'Downloads' folder saves files downloaded from GlobalArchive.
+
+# The 'Staging' folder is used to save the combined files (e.g. metadata, maxn or length) NOTE: These initial outputs have not gone through any check (e.g. checks against the life-history sheet)
+
+# **The only folder you will need to create is your working directory**
 
 ## Set your working directory ----
-working.dir<-("C:/GitHub/globalarchive-query") # Paste your working directory here (note the use of forward slash)
-
-setwd(working.dir)
+working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory of current file - or type your own
 
 ## Save these directory names to use later----
-data.dir=paste(working.dir,"Data",sep="/") 
+staging.dir<-paste(working.dir,"Staging",sep="/") 
 download.dir<-paste(working.dir,"Downloads",sep="/")
-tidy.dir=paste(working.dir,"Tidy data",sep="/")
+tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 
-## Clear downloads folder ----
-# If you have already ran this script and downloaded data from GlobalArchive it is wise to run this next line
+## Delete Downloads folder ----
 # It will delete any data sitting within your 'Downloads' folder 
 # DO NOT SAVE ANY OTHER FILES IN YOUR DOWNLOADS FILE
 # After running this line they will not be recoverable
-# This avoids doubling up files, or including files that are not meant to be included.
+# This avoids doubling up GlobalArchive files, or including files from other Projects.
+setwd(working.dir)
+unlink(download.dir, recursive=TRUE)
 
-unlink(download.dir, recursive=TRUE) 
-
-## Create a folder for downloaded data and tidy data ----
-# The below three lines will create the three subfolders within your working directory ('Downloads','Data' and 'Tidy data')
+## Create Downloads, Staging and Tidy data folders ----
 dir.create(file.path(working.dir, "Downloads"))
-dir.create(file.path(working.dir, "Data"))
+dir.create(file.path(working.dir, "Staging"))
 dir.create(file.path(working.dir, "Tidy data"))
 
-# Load some more functions that are used to download data from GlobalArchive ----
-source("https://raw.githubusercontent.com/GlobalArchiveManual/globalarchive-query/master/values.R")
+## Query from GlobalArchive----
+# Load default values from GlobalArchive ----
+source("https://raw.githubusercontent.com/UWAMEGFisheries/GlobalArchive/master/values.R")
 
-## Setup your query ----
-# Add your API user token ----
-# The first step in setting up your query is to enter your API. This token allows R to communicate with GlobalArchive
 
-# Finding your API
+# An API token allows R to communicate with GlobalArchive
+
+# Finding your API token
 # 1. Go to GlobalArchive and login.
-# 2. On the front page Click 'Data.
+# 2. On the front page Click 'Data'.
 # 3. In the top right corner click on your name, then 'API token'
 # 4. Generate an API token and copy it.
 # 5. Paste it below
 
-# Alternatively you can use the demo user API (Saved below), but this will only allow you download data shared with the demo user
-API_USER_TOKEN <- "95933aec4289dd17cfb5e3ceee841e8f3f619f56d5dce96492566401"
+# Alternatively you can use the demo user API (15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3)
 
-# Set up your search criteria ----
-# A number of example search criterias are given in the read me on the 'globalarchive-query' github repository.
+# Add your personal API user token ----
+API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
+
+
+# Set up your query ----
+
+# A number of example queries are given in the read me on the 'globalarchive-query' github repository.
 # See: https://github.com/GlobalArchiveManual/globalarchive-query
-# In this example we are searching for a WORKGROUP called "Example: merging different data types"
+
+
+## Download data ----
+# These files will be saved in the 'Downloads' folder within your working directory folder
+
+# In this example we are searching for any campaigns containing the string "PSGLMP"
 # NOTE: change spaces in name to '+'
 # NOTE: the % on either side of "PSGLMP" can be anything - this returns all campaigns that contain "PSGLMP" within the CampaignID
 
-q='{"filters":[{"name":"name","op":"like","val":"%PSGLMP%"}]}'  
+GlobalArchive::ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
+                                    q=GlobalArchive::query.pattern("%PSGLMP%"))
 
-## Download data ----
-# Run the next line to start downloading the files matching the search above
-# These files will be saved in the 'Downloads' folder within your working directory folder
-nresults <- ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, q=q)
+# Combine all downloaded data----
 
-# Combine all downloaded data together ----
-# Your data is now downloaded into many folders within the 'Downloads' folder.
-# The below code will go into each of these folder and find all files that have the same ending and bind them together.
-# In this example there are only campaigns that have Eventmeasure exports (_Points.txt, _Lengths.txt and 3Dpoints.txt files)
-# The end result is three data frames; metadata, maxn and length.
 
-## Metadata files ----
-# Combine all downloaded metadata .csv files into one data frame
-metadata <-list.files.GA("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
-  map_df(~read_files_csv(.))%>% # combine into dataframe
-  dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>% # Leaving this line on will only keep the 15 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
+# Your data is now downloaded into many folders within the 'Downloads' folder. (You can open File Explorer or use the Files Pane to check)
+# The below code will go into each of these folders and find all files that have the same ending (e.g. "_Metadata.csv") and bind them together.
+# The end product is three data frames; metadata, maxn and length.
+
+metadata <-GlobalArchive::list.files.GA("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
+  purrr::map_df(~read_files_csv(.))%>% # combine into dataframe
+  dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>% # This line ONLY keep the 15 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
-## Points files ----
+unique(metadata$project) # check the number of projects in metadata
+unique(metadata$campaignid) # check the number of campaigns in metadata
+
+setwd(staging.dir)
+write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
+
+## Combine MaxN files ----
 # Combine all downloaded Point .txt files into one data frame
-points <-list.files.GA("_Points.txt")%>% # list all files ending in "_Points.txt"
-  map_df(~read_files_txt(.))%>% # combine into dataframe
+points <-GlobalArchive::list.files.GA("_Points.txt")%>% # list all files ending in "_Points.txt"
+  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
   dplyr::select(campaignid,sample,family,genus,species,number,frame)%>% # Leaving this line on will only keep the 7 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
-## 3D Points files ----
-# Combine all downloaded 3D Points .txt files into one data frame
-threedpoints.files <-list.files.GA("3DPoints.txt") # list all files ending in "3DPoints.txt"
-threedpoints.files$lines<-sapply(threedpoints.files,countLines) # Count lines in files (to avoid empty files breaking the script)
-threedpoints<-expand.files(threedpoints.files)%>% # remove all empty files
-  map_df(~read_files_txt(.))%>% # combine into dataframe
-  #dplyr::select(campaignid,sample,family,genus,species,range,number)%>% # Leaving this line on will only keep the 8 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
-  glimpse() 
 
-## Lengths files ----
-# Combine all downloaded Lengths txt files into one data frame
-length.files <-list.files.GA("Lengths.txt") # list all files ending in "Lengths.txt"
-length.files$lines<-sapply(length.files,countLines) # Count lines in files (to avoid empty files breaking the script)
-
-lengths<-expand.files(length.files)%>% # remove all empty files
-  map_df(~read_files_txt(.))%>% # combine into dataframe
-  dplyr::select(project,campaignid,sample,family,genus,species,length,range,number)%>% # Leaving this line on will only keep the 9 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
-  glimpse()
-
-## Make Maxn and length dataframes----
 # Turn points into maxn, combine with the metadata and only keep drops that were successful for count.
 maxn<-points%>%
-  group_by(campaignid,sample,frame,family,genus,species)%>%
+  dplyr::group_by(campaignid,sample,frame,family,genus,species)%>%
   dplyr::mutate(number=as.numeric(number))%>%
   dplyr::summarise(maxn=sum(number))%>%
   dplyr::group_by(campaignid,sample,family,genus,species)%>%
-  slice(which.max(maxn))%>%
-  ungroup()%>%
-  filter(!is.na(maxn))%>%
-  filter(!maxn==0)%>%
-  inner_join(metadata)%>%
-  filter(successful.count=="Yes")%>% 
+  dplyr::slice(which.max(maxn))%>%
+  dplyr::ungroup()%>%
+  dplyr::filter(!is.na(maxn))%>%
+  dplyr::filter(!maxn==0)%>%
+  dplyr::inner_join(metadata)%>%
+  dplyr::filter(successful.count=="Yes")%>% 
+  glimpse()
+
+setwd(staging.dir)
+write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
+
+## Combine Lengths and 3D point files ----
+
+# Combine all downloaded 3D Points .txt files into one data frame
+threedpoints.files <-GlobalArchive::list.files.GA("3DPoints.txt") # list all files ending in "3DPoints.txt"
+threedpoints.files$lines<-sapply(threedpoints.files,countLines) # Count lines in files (to avoid empty files breaking the script)
+
+threedpoints<-GlobalArchive::expand.files(threedpoints.files)%>% # remove all empty files
+  purrr::map_df(~GlobalArchive::read_files_txt(.))%>% # combine into dataframe
+  dplyr::select(project,campaignid,sample,family,genus,species,range,number)%>% # Leaving this line on will only keep the 8 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
+  glimpse() 
+
+# Combine all downloaded Lengths txt files into one data frame
+length.files <-GlobalArchive::list.files.GA("Lengths.txt") # list all files ending in "Lengths.txt"
+length.files$lines<-sapply(length.files,countLines) # Count lines in files (to avoid empty files breaking the script)
+
+lengths<-GlobalArchive::expand.files(length.files)%>% # remove all empty files
+  purrr::map_df(~GlobalArhive::read_files_txt(.))%>% # combine into dataframe
+  dplyr::select(project,campaignid,sample,family,genus,species,length,range,number)%>% # Leaving this line on will only keep the 9 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
 # Combine lengths and 3D points together, combine with metadata and only keep drops that were successful for length.
@@ -141,48 +172,9 @@ length3dpoints<-lengths%>%
   plyr::rbind.fill(threedpoints)%>%
   dplyr::mutate(length=as.numeric(length))%>%
   dplyr::mutate(number=as.numeric(number))%>%
-  inner_join(metadata,by=c("project","campaignid","sample"))%>%
-  filter(successful.length=="Yes")%>%
+  dplyr::inner_join(metadata,by=c("project","campaignid","sample"))%>%
+  dplyr::filter(successful.length=="Yes")%>%
   glimpse()
 
-## Combine "Campaign Information" ----
-# Combine extra information fields saved on GlobalArchive e.g. Sampling Method, Image Analysis Method, etc...
-
-uniq.campaign <- unique(unlist(metadata$campaignid)) # Use metadata to make a list to re-save info with campagn name 
-
-info.join<- data.frame()%>% # create a blank dataframe with campaignid and Project
-  c("campaignid","project")%>%
-  map_dfr( ~tibble(!!.x := logical() ) )
-
-for (i in 1:length(uniq.campaign)){
-  metadata.sub <- subset(metadata, campaignid == uniq.campaign[i]) # Subset metadata to get project info
-  project<-as.character(unique(metadata.sub$project)) # save project name
-  campaignid<-as.character(unique(metadata.sub$campaignid)) # save campaign name
-  setwd(paste(download.dir,project,campaignid,sep="/")) # set wd
-  info<-read.csv(".info.csv") # read in info csv 
-  df <- data.frame(info)%>% # make a dataframe
-    mutate(campaignid=as.character(campaignid))%>% # add in campaign id
-    mutate(project=as.character(project)) # add in project
-  info.join <- rbind(info.join,df) # add new dataframe to blank dataframe, loop will then add in the next campaign
-}
-
-# If this loop breaks it is because the info.csv downloaded is blank
-# This means no extra "Campaign Information" has been saved.
-# "Campaign Information" will need to be added to the campaign on GlobalArchive and then re-run line 78 (the line beginning with nresults)
-
-# Re format the "Campaign Information" so each CampaignID is a row
-info<-info.join%>%
-  select(project,campaignid,name,value)%>%
-  spread(.,name,value)
-
-unique(metadata$campaignid)%>%sort() # Check the number of campaigns within metadata
-unique(info$campaignid) # Check the number of campaigns with extra information
-
-## Save maxn and length files ----
-setwd(data.dir)
-write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
+setwd(staging.dir)
 write.csv(length3dpoints,paste(study,"length3dpoints.csv",sep="_"),row.names = FALSE)
-
-# Save metadata and "Campaign Information"
-write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
-write.csv(info,paste(study,"info.csv",sep="_"),row.names = FALSE)
