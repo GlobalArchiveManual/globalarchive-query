@@ -69,7 +69,7 @@ metadata<-read_csv(file=paste(study,"checked.metadata.csv",sep = "."),na = c("",
 # Make complete.maxn: fill in 0 and join in factors----
 dat<-read_csv(file=paste(study,"checked.maxn.csv",sep = "."),na = c("", " "))%>%
   dplyr::select(c(sample,family,genus,species,maxn))%>%
-  complete(sample,nesting(family,genus,species)) %>%
+  tidyr::complete(sample,nesting(family,genus,species)) %>%
   replace_na(list(maxn = 0))%>%
   group_by(sample,family,genus,species)%>%
   dplyr::summarise(maxn=sum(maxn))%>%
@@ -107,7 +107,7 @@ length.families<-read_csv(file=paste(study,"checked.length.csv",sep = "."),na = 
 complete.length.number<-read_csv(file=paste(study,"checked.length.csv",sep = "."))%>% #na = c("", " "))
   filter(!family=="Unknown")%>%
   dplyr::select(sample,family,genus,species,length,number,range)%>%
-  complete(sample,nesting(family,genus,species)) %>%
+  tidyr::complete(sample,nesting(family,genus,species)) %>%
   replace_na(list(number = 0))%>% #we add in zeros - in case we want to calulate abundance of species based on a length rule (e.g. greater than legal size)
   ungroup()%>%
   filter(!is.na(number))%>% #this should not do anything
