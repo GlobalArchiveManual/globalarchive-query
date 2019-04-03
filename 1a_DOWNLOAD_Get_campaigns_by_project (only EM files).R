@@ -50,14 +50,10 @@ study<-"project.example"
 ## Set your working directory ----
 working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory of current file - or type your own
 
-
-
 ## Save these directory names to use later----
 staging.dir<-paste(working.dir,"Staging",sep="/") 
 download.dir<-paste(working.dir,"Downloads",sep="/")
 tidy.dir<-paste(working.dir,"Tidy data",sep="/")
-
-
 
 ## Delete Downloads folder ----
 # It will delete any data sitting within your 'Downloads' folder 
@@ -65,15 +61,12 @@ tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 # After running this line they will not be recoverable
 # This avoids doubling up GlobalArchive files, or including files from other Projects.
 setwd(working.dir)
-unlink(download.dir, recursive=TRUE) 
-
+unlink(download.dir, recursive=TRUE)
 
 ## Create Downloads, Staging and Tidy data folders ----
 dir.create(file.path(working.dir, "Downloads"))
 dir.create(file.path(working.dir, "Staging"))
 dir.create(file.path(working.dir, "Tidy data"))
-
-
 
 ## Query from GlobalArchive----
 # Load default values from GlobalArchive ----
@@ -107,8 +100,8 @@ API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 # In this example we are searching for a PROJECT called "Pilbara Marine Conservation Partnership"
 # NOTE: change any spaces in the project name to '+'
 
-ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
-                     q=query.project("Pilbara+Marine+Conservation+Partnership"))
+GlobalArchive::ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
+                     q=GlobalArchive::query.project("Pilbara+Marine+Conservation+Partnership"))
 
 
 
@@ -119,64 +112,61 @@ ga.get.campaign.list(API_USER_TOKEN, process_campaign_object,
 # The below code will go into each of these folders and find all files that have the same ending (e.g. "_Metadata.csv") and bind them together.
 # The end product is three data frames; metadata, maxn and length.
 
-
-
-## Combine Metadata files ----
-
-metadata <-list.files.GA("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
-  map_df(~read_files_csv(.))%>% # combine into dataframe
+metadata <-GlobalArchive::list.files.GA("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
+  purrr::map_df(~read_files_csv(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>% # This line ONLY keep the 15 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
+
+unique(metadata$project) # check the number of projects in metadata
+unique(metadata$campaignid) # check the number of campaigns in metadata
 
 setwd(staging.dir)
 write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
 
-
-
 ## Combine MaxN files ----
 
 # Combine all downloaded Point .txt files into one data frame
-points <-list.files.GA("_Points.txt")%>% # list all files ending in "_Points.txt"
-  map_df(~read_files_txt(.))%>% # combine into dataframe
+points <-GlobalArchive::list.files.GA("_Points.txt")%>% # list all files ending in "_Points.txt"
+  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
   dplyr::select(campaignid,sample,family,genus,species,number,frame)%>% # Leaving this line on will only keep the 7 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
+
+
 # Turn points into maxn, combine with the metadata and only keep drops that were successful for count.
 maxn<-points%>%
-  group_by(campaignid,sample,frame,family,genus,species)%>%
+  dplyr::group_by(campaignid,sample,frame,family,genus,species)%>%
   dplyr::mutate(number=as.numeric(number))%>%
   dplyr::summarise(maxn=sum(number))%>%
   dplyr::group_by(campaignid,sample,family,genus,species)%>%
-  slice(which.max(maxn))%>%
-  ungroup()%>%
-  filter(!is.na(maxn))%>%
-  filter(!maxn==0)%>%
-  inner_join(metadata)%>%
-  filter(successful.count=="Yes")%>% 
+  dplyr::slice(which.max(maxn))%>%
+  dplyr::ungroup()%>%
+  dplyr::filter(!is.na(maxn))%>%
+  dplyr::filter(!maxn==0)%>%
+  dplyr::inner_join(metadata)%>%
+  dplyr::filter(successful.count=="Yes")%>% 
   glimpse()
 
 setwd(staging.dir)
 write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 
-
-
 ## Combine Lengths and 3D point files ----
 
 # Combine all downloaded 3D Points .txt files into one data frame
-threedpoints.files <-list.files.GA("3DPoints.txt") # list all files ending in "3DPoints.txt"
+threedpoints.files <-GlobalArchive::list.files.GA("3DPoints.txt") # list all files ending in "3DPoints.txt"
 threedpoints.files$lines<-sapply(threedpoints.files,countLines) # Count lines in files (to avoid empty files breaking the script)
 
-threedpoints<-expand.files(threedpoints.files)%>% # remove all empty files
-  map_df(~read_files_txt(.))%>% # combine into dataframe
+threedpoints<-GlobalArchive::expand.files(threedpoints.files)%>% # remove all empty files
+  purrr::map_df(~GlobalArchive::read_files_txt(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,family,genus,species,range,number)%>% # Leaving this line on will only keep the 8 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse() 
 
 # Combine all downloaded Lengths txt files into one data frame
-length.files <-list.files.GA("Lengths.txt") # list all files ending in "Lengths.txt"
+length.files <-GlobalArchive::list.files.GA("Lengths.txt") # list all files ending in "Lengths.txt"
 length.files$lines<-sapply(length.files,countLines) # Count lines in files (to avoid empty files breaking the script)
 
-lengths<-expand.files(length.files)%>% # remove all empty files
-  map_df(~read_files_txt(.))%>% # combine into dataframe
+lengths<-GlobalArchive::expand.files(length.files)%>% # remove all empty files
+  purrr::map_df(~GlobalArhive::read_files_txt(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,family,genus,species,length,range,number)%>% # Leaving this line on will only keep the 9 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
@@ -185,8 +175,8 @@ length3dpoints<-lengths%>%
   plyr::rbind.fill(threedpoints)%>%
   dplyr::mutate(length=as.numeric(length))%>%
   dplyr::mutate(number=as.numeric(number))%>%
-  inner_join(metadata,by=c("project","campaignid","sample"))%>%
-  filter(successful.length=="Yes")%>%
+  dplyr::inner_join(metadata,by=c("project","campaignid","sample"))%>%
+  dplyr::filter(successful.length=="Yes")%>%
   glimpse()
 
 setwd(staging.dir)
