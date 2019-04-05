@@ -99,23 +99,23 @@ API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 # In this example we are searching for a PROJECT called BIOL4408 Marine Ecology field trip"
 # NOTE: change any spaces in the project name to '+'
 
-GlobalArchive::ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
-                                    q=GlobalArchive::query.project("BIOL4408+Marine+Ecology+field+trip"))
+ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
+                                    q=query.project("BIOL4408+Marine+Ecology+field+trip"))
 
 # Combine all downloaded data----
 ## Metadata files ----
-metadata <-GlobalArchive::list.files.GA("Metadata.csv")%>%
-  purrr::map_df(~GlobalArchive::read_files_csv(.))%>%
+metadata <-list.files.GA("Metadata.csv")%>%
+  purrr::map_df(~read_files_csv(.))%>%
   glimpse()
 
 ## Count fles ----
-count <-GlobalArchive::list.files.GA("Count.csv")%>%
-  purrr::map_df(~GlobalArchive::read_files_csv(.))%>%
+count <-list.files.GA("Count.csv")%>%
+  purrr::map_df(~read_files_csv(.))%>%
   glimpse()
 
 ## Length files ----
-length <-GlobalArchive::list.files.GA("Length.csv")%>%
-  purrr::map_df(~GlobalArchive::read_files_csv(.))%>%
+length <-list.files.GA("Length.csv")%>%
+  purrr::map_df(~read_files_csv(.))%>%
   glimpse()
 
 # Add metadata to count and add in zeros ----

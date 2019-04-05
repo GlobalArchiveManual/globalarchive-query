@@ -99,8 +99,8 @@ API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 # In this example we are searching for a WORKGROUP called "Example: merging different data types"
 # NOTE: change spaces in the workgroup name to '+'
 
-GlobalArchive::ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
-                                    q=GlobalArchive::query.workgroup("Example:+merging+different+data+types"))
+ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
+                                    q=query.workgroup("Example:+merging+different+data+types"))
 
 # Combine all downloaded data----
 
@@ -109,7 +109,7 @@ GlobalArchive::ga.get.campaign.list(API_USER_TOKEN, process_campaign_object,
 # The below code will go into each of these folders and find all files that have the same ending (e.g. "_Metadata.csv") and bind them together.
 # The end product is three data frames; metadata, maxn and length.
 
-metadata <-GlobalArchive::list.files.GA("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
+metadata <-list.files.GA("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
   purrr::map_df(~read_files_csv(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>% # This line ONLY keep the 15 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
@@ -123,15 +123,15 @@ write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
 ## Combine MaxN files ----
 
 # Combine all downloaded Point .txt files into one data frame
-points <-GlobalArchive::list.files.GA("_Points.txt")%>% # list all files ending in "_Points.txt"
-  purrr::map_df(~GlobalArchive::read_files_txt(.))%>% # combine into dataframe
+points <-list.files.GA("_Points.txt")%>% # list all files ending in "_Points.txt"
+  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
   dplyr::select(campaignid,sample,family,genus,species,number,frame)%>% # Leaving this line on will only keep the 7 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
 ## Count fles ----
 # Combine all downloaded generic Count.csv files into one data frame
-count <-GlobalArchive::list.files.GA("Count.csv")%>% # list all files ending in "Count.csv"
-  purrr::map_df(~GlobalArchive::read_files_csv(.))%>% # combine into dataframe
+count <-list.files.GA("Count.csv")%>% # list all files ending in "Count.csv"
+  purrr::map_df(~read_files_csv(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,family,genus,species,count)%>% # Leaving this line on will only keep the 7 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
@@ -162,26 +162,26 @@ write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 ## Combine Lengths and 3D point files ----
 
 # Combine all downloaded 3D Points .txt files into one data frame
-threedpoints.files <-GlobalArchive::list.files.GA("3DPoints.txt") # list all files ending in "3DPoints.txt"
+threedpoints.files <-list.files.GA("3DPoints.txt") # list all files ending in "3DPoints.txt"
 threedpoints.files$lines<-sapply(threedpoints.files,countLines) # Count lines in files (to avoid empty files breaking the script)
 
-threedpoints<-GlobalArchive::expand.files(threedpoints.files)%>% # remove all empty files
-  purrr::map_df(~GlobalArchive::read_files_txt(.))%>% # combine into dataframe
+threedpoints<-expand.files(threedpoints.files)%>% # remove all empty files
+  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,family,genus,species,range,number)%>% # Leaving this line on will only keep the 8 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse() 
 
 # Combine all downloaded Lengths txt files into one data frame (EM)
-length.files <-GlobalArchive::list.files.GA("Lengths.txt") # list all files ending in "Lengths.txt"
+length.files <-list.files.GA("Lengths.txt") # list all files ending in "Lengths.txt"
 length.files$lines<-sapply(length.files,countLines) # Count lines in files (to avoid empty files breaking the script)
 
-lengths<-GlobalArchive::expand.files(length.files)%>% # remove all empty files
-  purrr::map_df(~GlobalArchive::read_files_txt(.))%>% # combine into dataframe
+lengths<-expand.files(length.files)%>% # remove all empty files
+  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,family,genus,species,length,range,number)%>% # Leaving this line on will only keep the 9 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
 # Combine all downloaded generic Length.csv files into one data frame
-length <-GlobalArchive::list.files.GA("Length.csv")%>% # list all files ending in "Length.csv"
-  purrr::map_df(~GlobalArchive::read_files_csv(.))%>% # combine into dataframe
+length <-list.files.GA("Length.csv")%>% # list all files ending in "Length.csv"
+  purrr::map_df(~read_files_csv(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,family,genus,species,length,count)%>% # Leaving this line on will only keep the 8 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 

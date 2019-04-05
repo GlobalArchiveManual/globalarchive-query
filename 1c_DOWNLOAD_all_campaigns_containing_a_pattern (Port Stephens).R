@@ -101,8 +101,8 @@ API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 # NOTE: change spaces in name to '+'
 # NOTE: the % on either side of "PSGLMP" can be anything - this returns all campaigns that contain "PSGLMP" within the CampaignID
 
-GlobalArchive::ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
-                                    q=GlobalArchive::query.pattern("%PSGLMP%"))
+ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
+                                    q=query.pattern("%PSGLMP%"))
 
 # Combine all downloaded data----
 
@@ -111,7 +111,7 @@ GlobalArchive::ga.get.campaign.list(API_USER_TOKEN, process_campaign_object,
 # The below code will go into each of these folders and find all files that have the same ending (e.g. "_Metadata.csv") and bind them together.
 # The end product is three data frames; metadata, maxn and length.
 
-metadata <-GlobalArchive::list.files.GA("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
+metadata <-list.files.GA("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
   purrr::map_df(~read_files_csv(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>% # This line ONLY keep the 15 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
@@ -124,7 +124,7 @@ write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
 
 ## Combine MaxN files ----
 # Combine all downloaded Point .txt files into one data frame
-points <-GlobalArchive::list.files.GA("_Points.txt")%>% # list all files ending in "_Points.txt"
+points <-list.files.GA("_Points.txt")%>% # list all files ending in "_Points.txt"
   purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
   dplyr::select(campaignid,sample,family,genus,species,number,frame)%>% # Leaving this line on will only keep the 7 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
@@ -150,20 +150,20 @@ write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 ## Combine Lengths and 3D point files ----
 
 # Combine all downloaded 3D Points .txt files into one data frame
-threedpoints.files <-GlobalArchive::list.files.GA("3DPoints.txt") # list all files ending in "3DPoints.txt"
+threedpoints.files <-list.files.GA("3DPoints.txt") # list all files ending in "3DPoints.txt"
 threedpoints.files$lines<-sapply(threedpoints.files,countLines) # Count lines in files (to avoid empty files breaking the script)
 
-threedpoints<-GlobalArchive::expand.files(threedpoints.files)%>% # remove all empty files
-  purrr::map_df(~GlobalArchive::read_files_txt(.))%>% # combine into dataframe
+threedpoints<-expand.files(threedpoints.files)%>% # remove all empty files
+  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,family,genus,species,range,number)%>% # Leaving this line on will only keep the 8 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse() 
 
 # Combine all downloaded Lengths txt files into one data frame
-length.files <-GlobalArchive::list.files.GA("Lengths.txt") # list all files ending in "Lengths.txt"
+length.files <-list.files.GA("Lengths.txt") # list all files ending in "Lengths.txt"
 length.files$lines<-sapply(length.files,countLines) # Count lines in files (to avoid empty files breaking the script)
 
-lengths<-GlobalArchive::expand.files(length.files)%>% # remove all empty files
-  purrr::map_df(~GlobalArhive::read_files_txt(.))%>% # combine into dataframe
+lengths<-expand.files(length.files)%>% # remove all empty files
+  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,family,genus,species,length,range,number)%>% # Leaving this line on will only keep the 9 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
