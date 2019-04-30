@@ -8,13 +8,12 @@
 
 ### Please forward any updates and improvements to tim.langlois@uwa.edu.au & brooke.gibbons@uwa.edu.au or raise an issue in the "globalarchive-query" GitHub repository
 
-
 rm(list=ls()) # Clear memory
 
 ## Load Libraries ----
 # To connect to GlobalArchive
 library(devtools)
-# install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
+install_github("UWAMEGFisheries/GlobalArchive") # to check for updates
 library(GlobalArchive)
 library(httr)
 library(jsonlite)
@@ -29,12 +28,9 @@ library(purrr)
 library(readr)
 library(stringr)
 
-
 ## Set Study Name ----
 # Change this to suit your study name. This will also be the prefix on your final saved files.
 study<-"project.example" 
-
-
 
 ## Folder Structure ----
 # This script uses one main folder ('working directory')
@@ -72,7 +68,6 @@ dir.create(file.path(working.dir, "Tidy data"))
 # Load default values from GlobalArchive ----
 source("https://raw.githubusercontent.com/UWAMEGFisheries/GlobalArchive/master/values.R")
 
-
 # An API token allows R to communicate with GlobalArchive
 
 # Finding your API token
@@ -87,12 +82,9 @@ source("https://raw.githubusercontent.com/UWAMEGFisheries/GlobalArchive/master/v
 # Add your personal API user token ----
 API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 
-
 # Set up your query ----
-
 # A number of example queries are given in the read me on the 'globalarchive-query' github repository.
 # See: https://github.com/GlobalArchiveManual/globalarchive-query
-
 
 ## Download data ----
 # These files will be saved in the 'Downloads' folder within your working directory folder
@@ -101,10 +93,7 @@ API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 
 ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
                                     q=query.workgroup("Example:+merging+different+data+types"))
-
 # Combine all downloaded data----
-
-
 # Your data is now downloaded into many folders within the 'Downloads' folder. (You can open File Explorer or use the Files Pane to check)
 # The below code will go into each of these folders and find all files that have the same ending (e.g. "_Metadata.csv") and bind them together.
 # The end product is three data frames; metadata, maxn and length.
@@ -120,79 +109,18 @@ unique(metadata$campaignid) # check the number of campaigns in metadata
 setwd(staging.dir)
 write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
 
-## Combine MaxN files ----
-
-# Combine all downloaded Point .txt files into one data frame
-points <-list.files.GA("_Points.txt")%>% # list all files ending in "_Points.txt"
-  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
-  dplyr::select(campaignid,sample,family,genus,species,number,frame)%>% # Leaving this line on will only keep the 7 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
-  glimpse()
-
-## Count fles ----
-# Combine all downloaded generic Count.csv files into one data frame
-count <-list.files.GA("Count.csv")%>% # list all files ending in "Count.csv"
-  purrr::map_df(~read_files_csv(.))%>% # combine into dataframe
-  dplyr::select(project,campaignid,sample,family,genus,species,count)%>% # Leaving this line on will only keep the 7 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
-  glimpse()
-
-# Turn points into maxn, combine with the generic count. Join metadata and only keep drops that were successful for count.
-maxn<-points%>%
-  dplyr::group_by(campaignid,sample,frame,family,genus,species)%>%
-  dplyr::mutate(number=as.numeric(number))%>%
-  dplyr::summarise(maxn=sum(number))%>%
-  dplyr::group_by(campaignid,sample,family,genus,species)%>%
-  dplyr::slice(which.max(maxn))%>%
-  dplyr::ungroup()%>%
-  dplyr::filter(!is.na(maxn))%>%
-  dplyr::select(-frame)%>% 
-  plyr::rbind.fill(count)%>% # Add in generic count data
+## Combine Points and Count files into maxn ----
+maxn<-create.maxn()%>%
   dplyr::inner_join(metadata)%>%
-  tidyr::replace_na(list(maxn=0))%>%
   dplyr::filter(successful.count=="Yes")%>%
-  dplyr::mutate(maxn=ifelse(maxn%in%c(0,NA),count,maxn))%>% 
-  dplyr::mutate(maxn=as.numeric(maxn))%>%
-  dplyr::select(-c(count))%>%
-  dplyr::filter(maxn>0)%>%
-  glimpse()
+  dplyr::filter(maxn>0)
 
 # Save MaxN file ----
 setwd(staging.dir)
 write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 
-## Combine Lengths and 3D point files ----
-
-# Combine all downloaded 3D Points .txt files into one data frame
-threedpoints.files <-list.files.GA("3DPoints.txt") # list all files ending in "3DPoints.txt"
-threedpoints.files$lines<-sapply(threedpoints.files,countLines) # Count lines in files (to avoid empty files breaking the script)
-
-threedpoints<-expand.files(threedpoints.files)%>% # remove all empty files
-  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
-  dplyr::select(project,campaignid,sample,family,genus,species,range,number)%>% # Leaving this line on will only keep the 8 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
-  glimpse() 
-
-# Combine all downloaded Lengths txt files into one data frame (EM)
-length.files <-list.files.GA("Lengths.txt") # list all files ending in "Lengths.txt"
-length.files$lines<-sapply(length.files,countLines) # Count lines in files (to avoid empty files breaking the script)
-
-lengths<-expand.files(length.files)%>% # remove all empty files
-  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
-  dplyr::select(project,campaignid,sample,family,genus,species,length,range,number)%>% # Leaving this line on will only keep the 9 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
-  glimpse()
-
-# Combine all downloaded generic Length.csv files into one data frame
-length <-list.files.GA("Length.csv")%>% # list all files ending in "Length.csv"
-  purrr::map_df(~read_files_csv(.))%>% # combine into dataframe
-  dplyr::select(project,campaignid,sample,family,genus,species,length,count)%>% # Leaving this line on will only keep the 8 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
-  glimpse()
-
-# Combine lengths, generic lengths and 3D points together. Join metadata and only keep drops that were successful for length.
-length3dpoints<-lengths%>%
-  plyr::rbind.fill(threedpoints)%>%
-  plyr::rbind.fill(length)%>%
-  dplyr::mutate(number=ifelse(number%in%c(0,NA),count,number))%>%
-  dplyr::select(-c(count))%>%
-  dplyr::mutate(length=as.numeric(length))%>%
-  dplyr::mutate(number=as.numeric(number))%>%
+## Combine Length, Lengths and 3D point files into length3dpoints----
+length3dpoints<-create.length3dpoints()%>%
   dplyr::inner_join(metadata)%>%
   dplyr::filter(successful.length=="Yes")%>%
   glimpse()

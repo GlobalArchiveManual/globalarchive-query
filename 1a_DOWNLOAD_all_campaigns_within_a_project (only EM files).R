@@ -14,7 +14,7 @@ rm(list=ls()) # Clear memory
 ## Load Libraries ----
 # To connect to GlobalArchive
 library(devtools)
-# install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
+install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
 library(GlobalArchive)
 library(httr)
 library(jsonlite)
