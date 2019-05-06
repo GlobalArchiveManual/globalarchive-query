@@ -8,12 +8,14 @@
 
 ### Please forward any updates and improvements to tim.langlois@uwa.edu.au & brooke.gibbons@uwa.edu.au or raise an issue in the "globalarchive-query" GitHub repository
 
+# Hi ash
+
 rm(list=ls()) # Clear memory
 
 ## Load Libraries ----
 # To connect to GlobalArchive
 library(devtools)
-install_github("UWAMEGFisheries/GlobalArchive") # to check for updates
+install_github("UWAMEGFisheries/GlobalArchive", dependencies = TRUE) # to check for updates
 library(GlobalArchive)
 library(httr)
 library(jsonlite)
@@ -121,6 +123,7 @@ write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 
 ## Combine Length, Lengths and 3D point files into length3dpoints----
 length3dpoints<-create.length3dpoints()%>%
+  select(-c(time,project,comment))%>% # take time out  there is also a time column in the metadata
   dplyr::inner_join(metadata)%>%
   dplyr::filter(successful.length=="Yes")%>%
   glimpse()
