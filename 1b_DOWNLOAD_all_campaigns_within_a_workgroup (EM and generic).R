@@ -8,7 +8,6 @@
 
 ### Please forward any updates and improvements to tim.langlois@uwa.edu.au & brooke.gibbons@uwa.edu.au or raise an issue in the "globalarchive-query" GitHub repository
 
-# Hi ash
 
 rm(list=ls()) # Clear memory
 
