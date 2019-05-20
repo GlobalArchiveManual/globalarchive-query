@@ -16,9 +16,6 @@ rm(list=ls()) # Clear memory
 library(devtools)
 install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
 library(GlobalArchive)
-#library(httr)
-#library(jsonlite)
-#library(R.utils)
 # To connect to GitHub
 library(RCurl)
 # To tidy data
