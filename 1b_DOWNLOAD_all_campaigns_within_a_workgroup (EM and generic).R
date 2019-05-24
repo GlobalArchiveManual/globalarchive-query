@@ -93,14 +93,14 @@ API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 # NOTE: change spaces in the workgroup name to '+'
 
 ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
-                                    q=query.workgroup("Example:+merging+different+data+types"))
+                                    q=ga.query.workgroup("Example:+merging+different+data+types"))
 # Combine all downloaded data----
 # Your data is now downloaded into many folders within the 'Downloads' folder. (You can open File Explorer or use the Files Pane to check)
 # The below code will go into each of these folders and find all files that have the same ending (e.g. "_Metadata.csv") and bind them together.
 # The end product is three data frames; metadata, maxn and length.
 
-metadata <-list.files.GA("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
-  purrr::map_df(~read_files_csv(.))%>% # combine into dataframe
+metadata <-ga.list.files("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
+  purrr::map_df(~ga.read.files_csv(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>% # This line ONLY keep the 15 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
@@ -111,7 +111,7 @@ setwd(staging.dir)
 write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
 
 ## Combine Points and Count files into maxn ----
-maxn<-create.maxn()%>%
+maxn<-ga.create.maxn()%>%
   dplyr::inner_join(metadata)%>%
   dplyr::filter(successful.count=="Yes")%>%
   dplyr::filter(maxn>0)
@@ -121,7 +121,7 @@ setwd(staging.dir)
 write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 
 ## Combine Length, Lengths and 3D point files into length3dpoints----
-length3dpoints<-create.length3dpoints()%>%
+length3dpoints<-ga.create.length3dpoints()%>%
   select(-c(time,project,comment))%>% # take time out  there is also a time column in the metadata
   dplyr::inner_join(metadata)%>%
   dplyr::filter(successful.length=="Yes")%>%

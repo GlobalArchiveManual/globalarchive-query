@@ -13,7 +13,7 @@ rm(list=ls()) # Clear memory
 ## Load Libraries ----
 # To connect to GlobalArchive
 library(devtools)
-# install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
+#install_github("UWAMEGFisheries/GlobalArchive") #to check for updates
 library(GlobalArchive)
 library(httr)
 library(jsonlite)
@@ -71,7 +71,6 @@ dir.create(file.path(working.dir, "Tidy data"))
 # Load default values from GlobalArchive ----
 source("https://raw.githubusercontent.com/UWAMEGFisheries/GlobalArchive/master/values.R")
 
-
 # An API token allows R to communicate with GlobalArchive
 
 # Finding your API token
@@ -86,7 +85,6 @@ source("https://raw.githubusercontent.com/UWAMEGFisheries/GlobalArchive/master/v
 # Add your personal API user token ----
 API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 
-
 # Set up your query ----
 
 # A number of example queries are given in the read me on the 'globalarchive-query' github repository.
@@ -100,22 +98,22 @@ API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
 # NOTE: change any spaces in the project name to '+'
 
 ga.get.campaign.list(API_USER_TOKEN, process_campaign_object, 
-                                    q=query.project("BIOL4408+Marine+Ecology+field+trip"))
+                                    q=ga.query.project("BIOL4408+Marine+Ecology+field+trip"))
 
 # Combine all downloaded data----
 ## Metadata files ----
-metadata <-list.files.GA("Metadata.csv")%>%
-  purrr::map_df(~read_files_csv(.))%>%
+metadata <-ga.list.files("Metadata.csv")%>%
+  purrr::map_df(~ga.read.files_csv(.))%>%
   glimpse()
 
 ## Count fles ----
-count <-list.files.GA("Count.csv")%>%
-  purrr::map_df(~read_files_csv(.))%>%
+count <-ga.list.files("Count.csv")%>%
+  purrr::map_df(~ga.read.files_csv(.))%>%
   glimpse()
 
 ## Length files ----
-length <-list.files.GA("Length.csv")%>%
-  purrr::map_df(~read_files_csv(.))%>%
+length <-ga.list.files("Length.csv")%>%
+  purrr::map_df(~ga.read.files_csv(.))%>%
   glimpse()
 
 # Add metadata to count and add in zeros ----

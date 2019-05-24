@@ -60,8 +60,8 @@ source("https://raw.githubusercontent.com/UWAMEGFisheries/GlobalArchive/master/v
 # The below code will find all files that have the same ending (e.g. "_Metadata.csv") and bind them together.
 # The end product is three data frames; metadata, maxn and length.
 
-metadata <-list.files.GA("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
-  purrr::map_df(~read_files_csv(.))%>% # combine into dataframe
+metadata <-ga.list.files("_Metadata.csv")%>% # list all files ending in "_Metadata.csv"
+  purrr::map_df(~ga.read.files_csv(.))%>% # combine into dataframe
   dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>% # This line ONLY keep the 15 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
@@ -71,59 +71,23 @@ unique(metadata$campaignid) # check the number of campaigns in metadata
 setwd(staging.dir)
 write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
 
-## Combine MaxN files ----
-
-# Combine all downloaded Point .txt files into one data frame
-points <-list.files.GA("_Points.txt")%>% # list all files ending in "_Points.txt"
-  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
-  dplyr::select(campaignid,sample,family,genus,species,number,frame)%>% # Leaving this line on will only keep the 7 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
-  glimpse()
-
-# Turn points into maxn, combine with the metadata and only keep drops that were successful for count.
-maxn<-points%>%
-  dplyr::group_by(campaignid,sample,frame,family,genus,species)%>%
-  dplyr::mutate(number=as.numeric(number))%>%
-  dplyr::summarise(maxn=sum(number))%>%
-  dplyr::group_by(campaignid,sample,family,genus,species)%>%
-  dplyr::slice(which.max(maxn))%>%
-  dplyr::ungroup()%>%
-  dplyr::filter(!is.na(maxn))%>%
-  dplyr::filter(!maxn==0)%>%
+## Combine Points and Count files into maxn ----
+maxn<-ga.create.maxn()%>%
   dplyr::inner_join(metadata)%>%
-  dplyr::filter(successful.count=="Yes")%>% 
-  glimpse()
+  dplyr::filter(successful.count=="Yes")%>%
+  dplyr::filter(maxn>0)
 
+# Save MaxN file ----
 setwd(staging.dir)
 write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 
-## Combine Lengths and 3D point files ----
-
-# Combine all downloaded 3D Points .txt files into one data frame
-threedpoints.files <-list.files.GA("3DPoints.txt") # list all files ending in "3DPoints.txt"
-threedpoints.files$lines<-sapply(threedpoints.files,countLines) # Count lines in files (to avoid empty files breaking the script)
-
-threedpoints<-expand.files(threedpoints.files)%>% # remove all empty files
-  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
-  dplyr::select(project,campaignid,sample,family,genus,species,range,number)%>% # Leaving this line on will only keep the 8 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
-  glimpse() 
-
-# Combine all downloaded Lengths txt files into one data frame
-length.files <-list.files.GA("Lengths.txt") # list all files ending in "Lengths.txt"
-length.files$lines<-sapply(length.files,countLines) # Count lines in files (to avoid empty files breaking the script)
-
-lengths<-expand.files(length.files)%>% # remove all empty files
-  purrr::map_df(~read_files_txt(.))%>% # combine into dataframe
-  dplyr::select(project,campaignid,sample,family,genus,species,length,range,number)%>% # Leaving this line on will only keep the 9 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
-  glimpse()
-
-# Combine lengths and 3D points together, combine with metadata and only keep drops that were successful for length.
-length3dpoints<-lengths%>%
-  plyr::rbind.fill(threedpoints)%>%
-  dplyr::mutate(length=as.numeric(length))%>%
-  dplyr::mutate(number=as.numeric(number))%>%
-  dplyr::inner_join(metadata,by=c("project","campaignid","sample"))%>%
+## Combine Length, Lengths and 3D point files into length3dpoints----
+length3dpoints<-ga.create.length3dpoints()%>%
+  select(-c(time,project,comment))%>% # take time out  there is also a time column in the metadata
+  dplyr::inner_join(metadata)%>%
   dplyr::filter(successful.length=="Yes")%>%
   glimpse()
 
+## Save length files ----
 setwd(staging.dir)
 write.csv(length3dpoints,paste(study,"length3dpoints.csv",sep="_"),row.names = FALSE)
