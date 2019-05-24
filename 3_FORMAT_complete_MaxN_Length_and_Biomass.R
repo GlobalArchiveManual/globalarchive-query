@@ -129,7 +129,7 @@ ggplot(data=expanded.length, aes(y=as.numeric(length))) +
 # There are 6 steps
 # 1. use life.history---
 master<-gs_title("Australia.life.history")%>%
-  gs_read_csv(ws = "australia.life.history")%>%clean_names()%>%
+  gs_read_csv(ws = "australia.life.history")%>%ga.clean.names()%>%
   filter(grepl('Australia', global.region))%>%
   filter(grepl('NW', marine.region))%>%
   dplyr::mutate(all=as.numeric(all))%>%

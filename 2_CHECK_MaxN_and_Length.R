@@ -157,7 +157,7 @@ write.csv(fish.greater.than.1.meter,file=paste(study,"length.greater.than.1.mete
 # currently set for the Pilbara, Australia example data set
 
 master<-gs_title("Australia.life.history")%>%
-  gs_read_csv(ws = "australia.life.history")%>%clean_names()%>%
+  gs_read_csv(ws = "australia.life.history")%>%ga.clean.names()%>%
   filter(grepl('Australia', global.region))%>% # Change country here
   filter(grepl('NW', marine.region))%>% # Select marine region (currently this is only for Australia)
   dplyr::mutate(all=as.numeric(all))%>%
@@ -171,7 +171,7 @@ master<-gs_title("Australia.life.history")%>%
 synonyms <- gs_title("Synonyms_Australia")%>%
   gs_read_csv(ws = "Synonyms_Australia")%>%
   distinct()%>%
-  clean_names()%>%
+  ga.clean.names()%>%
   select(-comment)
 
 # Update by synonyms ----

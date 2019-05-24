@@ -2,7 +2,7 @@
     "path" : "C:/GitHub/globalarchive-query",
     "sortOrder" : [
         {
-            "ascending" : false,
+            "ascending" : true,
             "columnIndex" : 2
         }
     ]
