@@ -203,27 +203,38 @@ setwd(error.dir)
 write.csv(length.taxa.not.match,file=paste(study,"length.taxa.not.match.life.history.csv",sep = "."), row.names=FALSE)
 
 # Check Length vs. max.length in life.history----
-# 1. Create mean max length for each family---
-family.max.length<-master%>%
-  replace_na(list(fb.length_max=0))%>%
-  dplyr::group_by(family)%>%
-  dplyr::summarise(famlength_max=mean(fb.length_max),na.rm = T)%>%
-  dplyr::filter(!famlength_max==0)%>%
-  select(-na.rm)
+# 1. Create mean max length for each family and each genus ---
 
-# 2. Create a new master list with family mean max where missing species max.length ----
-# (you can also replace all "family" with "genus" to create a genus average)
-master.with.fam.max<-left_join(master,family.max.length,by=c("family"))%>%
+family.max.length<-master%>%
+  filter(!is.na(fb.length_max))%>%
+  dplyr::group_by(family)%>%
+  dplyr::summarise(famlength_max=mean(fb.length_max))%>%
+  ungroup()
+
+genus.max.length<-master%>%
+  filter(!is.na(fb.length_max))%>%
+  dplyr::group_by(genus)%>%
+  dplyr::summarise(genuslength_max=mean(fb.length_max))%>%
+  ungroup()
+
+# 2. Create a new master list with family and genus mean max where missing species max.length ----
+master.min.max<-left_join(master,family.max.length,by=c("family"))%>% # add in family values
+  left_join(.,genus.max.length)%>% # add in genus values
+  dplyr::mutate(fb.length_max=ifelse((is.na(fb.length_max)),genuslength_max,fb.length_max))%>%
   dplyr::mutate(fb.length_max=ifelse((is.na(fb.length_max)),famlength_max,fb.length_max))%>%
-  dplyr::select(-c(famlength_max))%>%
+  dplyr::select(-c(famlength_max,genuslength_max))%>%
+  mutate(min.length=0.15*fb.length_max)%>% # change values here
+  mutate(max.length=0.85*fb.length_max)%>% # change values here
   glimpse()
 
 # 3. Create list of wrong length, ordered by %error, for checking in .EMObs files or removing from data----
-wrong.length.taxa<-left_join(length,master.with.fam.max,by=c("family","genus","species"))%>%
-  dplyr::filter(length >= fb.length_max)%>%
-  dplyr::select(campaignid,sample,family,genus,species,length,fb.length_max,fb.ltypemaxm)%>%
-  dplyr::mutate(percent.error=(length-fb.length_max)/fb.length_max*100)%>%
-  dplyr::arrange(desc(percent.error))%>%
+wrong.length.taxa<-left_join(length,master.min.max,by=c("family","genus","species"))%>%
+  dplyr::filter(length<min.length|length>max.length)%>%
+  mutate(reason=ifelse(length<min.length,"too small","too big"))%>%
+  dplyr::select(campaignid,sample,family,genus,species,length,min.length,max.length,fb.length_max,reason)%>%
+  mutate(difference=ifelse(reason%in%c("too small"),(min.length-length),(length-max.length)))%>%
+  dplyr::mutate(percent.of.fb.max=(length/fb.length_max*100))%>%
+  #dplyr::arrange(desc(percent.error))%>%
   glimpse()
 
 setwd(error.dir)

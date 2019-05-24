@@ -9,3 +9,4 @@
 /Staging
 .DS_Store
 .Rproj.user/shared/notebooks/paths
+.httr-oauth
