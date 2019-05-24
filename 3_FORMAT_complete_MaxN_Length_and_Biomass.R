@@ -23,8 +23,6 @@
 # Clear memory ----
 rm(list=ls())
 
-
-
 # Libraries required ----
 # To connect to GlobalArchive
 library(devtools)
@@ -44,8 +42,6 @@ library(ggplot2)
 # Study name---
 study<-"project.example" ## change for your project
 
-
-
 ## Set your working directory ----
 working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory of current file - or type your own
 
@@ -56,7 +52,6 @@ tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 plots.dir=paste(working.dir,"Plots",sep="/")
 error.dir=paste(working.dir,"Errors to check",sep="/")
 
-
 # Read in the data----
 setwd(tidy.dir)
 dir()
@@ -64,7 +59,6 @@ dir()
 # Read in metadata----
 metadata<-read_csv(file=paste(study,"checked.metadata.csv",sep = "."),na = c("", " "))%>%
   glimpse()
-
 
 # Make complete.maxn: fill in 0 and join in factors----
 dat<-read_csv(file=paste(study,"checked.maxn.csv",sep = "."),na = c("", " "))%>%
@@ -94,10 +88,7 @@ complete.maxn<-dat%>%
   inner_join(metadata)%>% #Joining metadata will use a lot of memory - # out if you need too
   glimpse()
 
-
-
 # Make complete.length.number.mass: fill in 0 and join in factors----
-
 length.families<-read_csv(file=paste(study,"checked.length.csv",sep = "."),na = c("", " "))%>%
   filter(!(family=="Unknown"))%>%
   select(family,genus,species)%>%
@@ -113,8 +104,6 @@ complete.length.number<-read_csv(file=paste(study,"checked.length.csv",sep = "."
   filter(!is.na(number))%>% #this should not do anything
   mutate(length=as.numeric(length))%>%
   glimpse()
-
-
 
 # Make the expanded length data----
 # For use in length analyses - i.e KDE or histograms
@@ -135,7 +124,6 @@ ggplot(data=expanded.length, aes(y=as.numeric(length))) +
   geom_boxplot(col="red",
                  fill="blue",
                  alpha = .2)
-
 
 # Make mass data from complete.length.number----
 # There are 6 steps
@@ -260,5 +248,3 @@ write.csv(complete.length.number, file=paste(study,"complete.length.number.csv",
 write.csv(expanded.length, file=paste(study,"expanded.length.csv",sep = "."), row.names=FALSE)
 
 write.csv(complete.length.number.mass, file=paste(study,"complete.length.number.mass.csv",sep = "."), row.names=FALSE)
-
-

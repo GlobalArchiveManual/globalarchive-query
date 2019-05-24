@@ -18,12 +18,8 @@
 # Please email tim.langlois@uwa.edu.au & brooke.gibbons@uwa.edu.au if you would like the life.history or synonyms googlesheets shared with you or have your local species information added.
 
 
-
-
 # Clear memory ----
 rm(list=ls())
-
-
 
 # Libraries required ----
 # To connect to GlobalArchive
@@ -43,13 +39,9 @@ library(ggplot2)
 # library(magrittr)
 # library(RCurl) # needed to download data from GitHub
 
-
-
 ## Set Study Name ----
 # Change this to suit your study name. This will also be the prefix on your final saved files.
 study<-"project.example" 
-
-
 
 ## Folder Structure ----
 # This script uses one main folder ('working directory')
@@ -70,14 +62,10 @@ tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 plots.dir=paste(working.dir,"Plots",sep="/")
 error.dir=paste(working.dir,"Errors to check",sep="/")
 
-
-
 ## Create a folder for Plots and Errors ----
 # The two lines below will create the 'Plots' and 'Errors to check' subfolders within the working directory
 dir.create(file.path(working.dir, "Plots"))
 dir.create(file.path(working.dir, "Errors to check"))
-
-
 
 # Import unchecked data from staging folder----
 setwd(staging.dir)
@@ -103,8 +91,6 @@ length<-read_csv(file=paste(study,"length3dpoints.csv",sep = "_"),na = c("", " "
   # data.frame()%>%
   glimpse()
 
-
-
 # BASIC checks----
 # Check if we have 3d points (Number) in addition to length----
 three.d.points<-length%>%
@@ -112,14 +98,10 @@ three.d.points<-length%>%
   filter(!is.na(number))%>%
   glimpse() # Do we have 3d points? 
 
-
-
 # Check if we have >1 fish associated with single length measures----
 schools<-length%>%
   filter(number>1)%>%
   glimpse() # Do we have schools? 
-
-
 
 # Standardise for RANGE and Error for Length ----
 # To standardise for RANGE and Error we can remove any length observations outside Range and Error rules
@@ -138,7 +120,6 @@ ggplot(data=length, aes(as.numeric(length))) +
                  alpha = .2)
 ggsave(file=paste(study,"check.length.png",sep = "_"))
 
-
 # Plot to visualise range data ---
 ggplot(data=length, aes(as.numeric(range))) +
   geom_histogram(aes(y =..density..),
@@ -155,7 +136,6 @@ ggplot(data=length, aes(range,length)) +
   geom_smooth()
 ggsave(file=paste(study,"check.range.vs.length.png",sep = "_"))
 
-
 # Check on the BIG fish in length data----
 setwd(error.dir)
 fish.greater.than.1.meter<-filter(length,length>1000)%>%
@@ -165,11 +145,6 @@ write.csv(fish.greater.than.1.meter,file=paste(study,"length.greater.than.1.mete
 
 # SERIOUS checks on fish length vs their max.length in life.history will be done below
 # Use the fish.greater.than.1.meter report to check for extreme outliers
-
-
-
-
-
 
 # SERIOUS data checks using the life.history googlesheet ----
 
@@ -199,16 +174,12 @@ synonyms <- gs_title("Synonyms_Australia")%>%
   clean_names()%>%
   select(-comment)
 
-
-
 # Update by synonyms ----
 # This function will standardise all taxa by their synonyms 
 # Use return.changes=T to view the taxa.replaced.by.synonym
 # Use save.report to save .csv file in your error directory
-maxn<-change.synonyms(maxn,return.changes=T,save.report = T)
-length<-change.synonyms(length,return.changes=T,save.report = T)
-
-
+maxn<-ga.change.synonyms(maxn,return.changes=T,save.report = T)
+length<-ga.change.synonyms(length,return.changes=T,save.report = T)
 
 # Check MaxN species names vs. life.history ----
 maxn.taxa.not.match.life.history<-master%>%
@@ -217,10 +188,9 @@ maxn.taxa.not.match.life.history<-master%>%
   # distinct(family,genus,species)%>% # use this line to keep only fam, gen, spe
   filter(!species%in%c("spp"))%>% # Ignore spp in the report
   glimpse()
+
 setwd(error.dir)
 write.csv(maxn.taxa.not.match.life.history,file=paste(study,"maxn.taxa.not.match.life.history.csv",sep = "."), row.names=FALSE)
-
-
 
 # Check Length species names vs. life.history ----
 length.taxa.not.match<-master%>%
@@ -228,10 +198,9 @@ length.taxa.not.match<-master%>%
   dplyr::distinct(campaignid,sample,family,genus,species)%>%
   filter(!species%in%c("spp"))%>% # Ignore spp in the report
   glimpse()
+
 setwd(error.dir)
 write.csv(length.taxa.not.match,file=paste(study,"length.taxa.not.match.life.history.csv",sep = "."), row.names=FALSE)
-
-
 
 # Check Length vs. max.length in life.history----
 # 1. Create mean max length for each family---
@@ -256,14 +225,14 @@ wrong.length.taxa<-left_join(length,master.with.fam.max,by=c("family","genus","s
   dplyr::mutate(percent.error=(length-fb.length_max)/fb.length_max*100)%>%
   dplyr::arrange(desc(percent.error))%>%
   glimpse()
+
 setwd(error.dir)
 write.csv(wrong.length.taxa,file=paste(study,"check.wrong.length.taxa.vs.life.history.csv",sep = "_"), row.names=FALSE)
 
-
-
 # Check MaxN per species/family vs. StereoMaxN, e.g. how many lengths are missing from the  MaxN ----
-# only examine samples where lengths were possible
-length.sample <- length%>%distinct(campaignid,sample)
+
+length.sample <- length%>%distinct(campaignid,sample) # only examine samples where lengths were possible
+
 # summarise length and then compare to maxn
 taxa.maxn.vs.stereo.summary<-length%>%
   group_by(campaignid,sample,family,genus,species)%>%
@@ -281,6 +250,7 @@ taxa.maxn.vs.stereo.summary<-length%>%
   select(campaignid,sample,family,genus,species,maxn,stereo.maxn,difference,percent.difference)%>%
   arrange(-difference)%>%
   glimpse()
+
 setwd(error.dir)
 write.csv(taxa.maxn.vs.stereo.summary,file=paste(study,"taxa.maxn.vs.stereo.summary.csv",sep = "_"), row.names=FALSE)
 
@@ -291,13 +261,8 @@ ggplot(taxa.maxn.vs.stereo.summary,aes(x=maxn,y=stereo.maxn,label = species))+
 setwd(plots.dir)
 ggsave(file=paste(study,"check.stereo.vs.maxn.png",sep = "_"))
 
-
-
 # NOW check through the files in your "Errors to check" folder and make corrections to .EMObs / generic files and then re-run this script.
-
 # IF you are happy to proceed by dropping the speices, length and range errors here you can run the lines below and write the checked data 
-
-
 
 # Drop errors from data----
 
@@ -330,6 +295,4 @@ write.csv(metadata, file=paste(study,"checked.metadata.csv",sep = "."), row.name
 write.csv(maxn, file=paste(study,"checked.maxn.csv",sep = "."), row.names=FALSE)
 write.csv(length, file=paste(study,"checked.length.csv",sep = "."), row.names=FALSE)
 
-
-
-# GO TO Cleaning script 2 
+# Go to FORMAT script (3) 
