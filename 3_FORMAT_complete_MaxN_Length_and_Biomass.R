@@ -38,6 +38,7 @@ library(dplyr)
 library(stringr)
 library(readr)
 library(ggplot2)
+library(fst)
 
 # Study name---
 study<-"project.example" ## change for your project
@@ -248,3 +249,9 @@ write.csv(complete.length.number, file=paste(study,"complete.length.number.csv",
 write.csv(expanded.length, file=paste(study,"expanded.length.csv",sep = "."), row.names=FALSE)
 
 write.csv(complete.length.number.mass, file=paste(study,"complete.length.number.mass.csv",sep = "."), row.names=FALSE)
+
+
+
+# Write .fst files for shiny app ---
+write.fst(complete.maxn, "complete.maxn.fst")
+
