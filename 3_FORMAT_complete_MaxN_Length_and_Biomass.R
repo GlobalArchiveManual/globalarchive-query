@@ -40,7 +40,7 @@ library(readr)
 library(ggplot2)
 
 # Study name---
-study<-"project.example" ## change for your project
+study<-"database.tables.example" ## change for your project
 
 ## Set your working directory ----
 working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory of current file - or type your own
