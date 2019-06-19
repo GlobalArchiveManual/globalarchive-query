@@ -41,7 +41,7 @@ library(ggplot2)
 
 ## Set Study Name ----
 # Change this to suit your study name. This will also be the prefix on your final saved files.
-study<-"project.example" 
+study<-"database.tables.example"
 
 ## Folder Structure ----
 # This script uses one main folder ('working directory')
@@ -93,12 +93,14 @@ length<-read_csv(file=paste(study,"length3dpoints.csv",sep = "_"),na = c("", " "
 
 # BASIC checks----
 # Check if we have 3d points (Number) in addition to length----
+# Add justification to avoid confusion
 three.d.points<-length%>%
   filter(is.na(length))%>%
   filter(!is.na(number))%>%
   glimpse() # Do we have 3d points? 
 
 # Check if we have >1 fish associated with single length measures----
+# Add why we need this e.g. to fix a mistaken number against multiple lengths
 schools<-length%>%
   filter(number>1)%>%
   glimpse() # Do we have schools? 
