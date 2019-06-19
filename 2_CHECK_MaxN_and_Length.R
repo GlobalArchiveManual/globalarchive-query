@@ -114,6 +114,8 @@ out.of.range<-filter(length,range>10000)%>%
   glimpse() # Shows fish more than 10 m away
 
 # Plot to visualise length data ---
+# change order of this as the range test is above
+# Add justification and units to x
 setwd(plots.dir)
 ggplot(data=length, aes(as.numeric(length))) +
   geom_histogram(aes(y =..density..),
@@ -139,6 +141,7 @@ ggplot(data=length, aes(range,length)) +
 ggsave(file=paste(study,"check.range.vs.length.png",sep = "_"))
 
 # Check on the BIG fish in length data----
+# This can probably go as they should be detected in the max length check for each species
 setwd(error.dir)
 fish.greater.than.1.meter<-filter(length,length>1000)%>%
   select(campaignid,sample,family,genus,species,length)%>%
@@ -155,8 +158,10 @@ write.csv(fish.greater.than.1.meter,file=paste(study,"length.greater.than.1.mete
 # 2. Check for any species that may have changed names and suggest synonyms
 # 3. Check measured length vs max.length for that species
 
-# Make sure to select the correct Country and Marine Region
+# Make sure to select the correct Country and Marine Region that matches your data (see the two filter lines below)
+# add list of marine regions to choose from
 # currently set for the Pilbara, Australia example data set
+
 
 master<-gs_title("Australia.life.history")%>%
   gs_read_csv(ws = "australia.life.history")%>%ga.clean.names()%>%
@@ -177,13 +182,14 @@ synonyms <- gs_title("Synonyms_Australia")%>%
   select(-comment)
 
 # Update by synonyms ----
-# This function will standardise all taxa by their synonyms 
-# Use return.changes=T to view the taxa.replaced.by.synonym
+# This function will change the names of species that have been reclassified (i.e. Pagrus auratus to Chrysophrys auratus)
+# Use return.changes=T to view the taxa.names.updated
 # Use save.report to save .csv file in your error directory
 maxn<-ga.change.synonyms(maxn,return.changes=T,save.report = T)
 length<-ga.change.synonyms(length,return.changes=T,save.report = T)
 
-# Check MaxN species names vs. life.history ----
+# Check MaxN for species that have not previously been observed in your region ----
+#change the name of the table to something likes maxn.species.not.previously.observed
 maxn.taxa.not.match.life.history<-master%>%
   anti_join(maxn,.,by=c("family","genus","species"))%>% 
   distinct(campaignid,sample,family,genus,species)%>% # use this line to show specific drops OR
@@ -194,7 +200,8 @@ maxn.taxa.not.match.life.history<-master%>%
 setwd(error.dir)
 write.csv(maxn.taxa.not.match.life.history,file=paste(study,"maxn.taxa.not.match.life.history.csv",sep = "."), row.names=FALSE)
 
-# Check Length species names vs. life.history ----
+# Check Length for species that have not previously been observed in your region ----
+#maxn.species.not.previously.observed
 length.taxa.not.match<-master%>%
   anti_join(length,.,by=c("family","genus","species"))%>%
   dplyr::distinct(campaignid,sample,family,genus,species)%>%
@@ -220,6 +227,7 @@ genus.max.length<-master%>%
   ungroup()
 
 # 2. Create a new master list with family and genus mean max where missing species max.length ----
+# Add some notes on the percentages incase people want to change
 master.min.max<-left_join(master,family.max.length,by=c("family"))%>% # add in family values
   left_join(.,genus.max.length)%>% # add in genus values
   dplyr::mutate(fb.length_max=ifelse((is.na(fb.length_max)),genuslength_max,fb.length_max))%>%
@@ -274,8 +282,9 @@ ggplot(taxa.maxn.vs.stereo.summary,aes(x=maxn,y=stereo.maxn,label = species))+
 setwd(plots.dir)
 ggsave(file=paste(study,"check.stereo.vs.maxn.png",sep = "_"))
 
+#Need to be more explicit here i.e. we strongly encourage you to fix these errors at the source (i.e. EMObs), however, there may be observations that you want to keep in the raw data but not upload to Global Archive (i.e. seasnakes), that you can drop using the code below.
 # NOW check through the files in your "Errors to check" folder and make corrections to .EMObs / generic files and then re-run this script.
-# IF you are happy to proceed by dropping the speices, length and range errors here you can run the lines below and write the checked data 
+# IF you are happy to proceed by removing the species, length and range errors here you can run the lines below and write the checked data 
 
 # Drop errors from data----
 
