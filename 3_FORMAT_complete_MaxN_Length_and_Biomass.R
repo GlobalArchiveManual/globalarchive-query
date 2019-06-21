@@ -59,12 +59,14 @@ dir()
 
 # Read in metadata----
 metadata<-read_csv(file=paste(study,"checked.metadata.csv",sep = "."),na = c("", " "))%>%
+  dplyr::mutate(id=paste(campaignid,sample,sep="."))%>%
   glimpse()
 
 # Make complete.maxn: fill in 0 and join in factors----
 dat<-read_csv(file=paste(study,"checked.maxn.csv",sep = "."),na = c("", " "))%>%
-  dplyr::select(c(sample,family,genus,species,maxn))%>%
-  tidyr::complete(sample,nesting(family,genus,species)) %>%
+  dplyr::mutate(id=paste(campaignid,sample,sep="."))%>%
+  dplyr::select(c(id,campaignid,sample,family,genus,species,maxn))%>%
+  tidyr::complete(nesting(id,campaignid,sample),nesting(family,genus,species)) %>%
   replace_na(list(maxn = 0))%>%
   group_by(sample,family,genus,species)%>%
   dplyr::summarise(maxn=sum(maxn))%>%
@@ -98,14 +100,19 @@ length.families<-read_csv(file=paste(study,"checked.length.csv",sep = "."),na = 
 
 complete.length.number<-read_csv(file=paste(study,"checked.length.csv",sep = "."))%>% #na = c("", " "))
   filter(!family=="Unknown")%>%
-  dplyr::select(campaignid,sample,family,genus,species,length,number,range)%>%
-  tidyr::complete(campaignid,sample,nesting(family,genus,species)) %>%
+  dplyr::mutate(id=paste(campaignid,sample,sep="."))%>%
+  dplyr::right_join(metadata ,by = c("id","campaignid", "sample"))%>% # add in all samples
+  dplyr::select(id,campaignid,sample,family,genus,species,length,number,range)%>%
+  tidyr::complete(nesting(id,campaignid,sample),nesting(family,genus,species)) %>%
   replace_na(list(number = 0))%>% #we add in zeros - in case we want to calulate abundance of species based on a length rule (e.g. greater than legal size)
   ungroup()%>%
-  filter(!is.na(number))%>% #this should not do anything
+  filter(!is.na(number))%>% # this should not do anything
   mutate(length=as.numeric(length))%>%
   left_join(.,metadata)%>%
   glimpse()
+
+length(unique(metadata$id)) # 1121
+length(unique(complete.length.number$id)) # 1121
 
 # Make the expanded length data----
 # For use in length analyses - i.e KDE or histograms
@@ -245,15 +252,16 @@ dir()
 
 write.csv(complete.maxn, file=paste(study,"complete.maxn.csv",sep = "."), row.names=FALSE)
 
-write.csv(complete.length.number, file=paste(study,"complete.length.number.csv",sep = "."), row.names=FALSE)
+write.csv(complete.length.number, file=paste(study,"complete.length.csv",sep = "."), row.names=FALSE)
 
 write.csv(expanded.length, file=paste(study,"expanded.length.csv",sep = "."), row.names=FALSE)
 
-write.csv(complete.length.number.mass, file=paste(study,"complete.length.number.mass.csv",sep = "."), row.names=FALSE)
+write.csv(complete.length.number.mass, file=paste(study,"complete.mass.csv",sep = "."), row.names=FALSE)
 
 complete.length.number<-complete.length.number%>%
   filter(number>0)
 
 # Write .fst files for shiny app ---
 write.fst(complete.maxn, "complete.maxn.fst")
-write.fst(complete.length.number,"complete.length.number.fst")
+write.fst(complete.length.number,"complete.length.fst")
+write.fst(complete.length.number.mass,"complete.mass.fst")
