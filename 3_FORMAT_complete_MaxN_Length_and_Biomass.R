@@ -98,12 +98,13 @@ length.families<-read_csv(file=paste(study,"checked.length.csv",sep = "."),na = 
 
 complete.length.number<-read_csv(file=paste(study,"checked.length.csv",sep = "."))%>% #na = c("", " "))
   filter(!family=="Unknown")%>%
-  dplyr::select(sample,family,genus,species,length,number,range)%>%
-  tidyr::complete(sample,nesting(family,genus,species)) %>%
+  dplyr::select(campaignid,sample,family,genus,species,length,number,range)%>%
+  tidyr::complete(campaignid,sample,nesting(family,genus,species)) %>%
   replace_na(list(number = 0))%>% #we add in zeros - in case we want to calulate abundance of species based on a length rule (e.g. greater than legal size)
   ungroup()%>%
   filter(!is.na(number))%>% #this should not do anything
   mutate(length=as.numeric(length))%>%
+  left_join(.,metadata)%>%
   glimpse()
 
 # Make the expanded length data----
@@ -250,8 +251,9 @@ write.csv(expanded.length, file=paste(study,"expanded.length.csv",sep = "."), ro
 
 write.csv(complete.length.number.mass, file=paste(study,"complete.length.number.mass.csv",sep = "."), row.names=FALSE)
 
-
+complete.length.number<-complete.length.number%>%
+  filter(number>0)
 
 # Write .fst files for shiny app ---
 write.fst(complete.maxn, "complete.maxn.fst")
-
+write.fst(complete.length.number,"complete.length.number.fst")
