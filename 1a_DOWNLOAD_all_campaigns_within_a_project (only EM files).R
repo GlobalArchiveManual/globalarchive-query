@@ -122,7 +122,7 @@ write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 
 ## Combine Length, Lengths and 3D point files into length3dpoints----
 length3dpoints<-ga.create.length3dpoints()%>%
-  select(-c(time,project,comment))%>% # take time out  there is also a time column in the metadata
+  select(-c(time,project,comment))%>% # take time out as there is also a time column in the metadata
   dplyr::inner_join(metadata)%>%
   dplyr::filter(successful.length=="Yes")%>%
   glimpse()
