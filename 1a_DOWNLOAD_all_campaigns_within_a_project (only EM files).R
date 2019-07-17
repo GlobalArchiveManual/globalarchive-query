@@ -131,3 +131,12 @@ length3dpoints<-ga.create.length3dpoints()%>%
 setwd(staging.dir)
 write.csv(length3dpoints,paste(study,"length3dpoints.csv",sep="_"),row.names = FALSE)
 
+## Habitat -----
+habitat <-ga.list.files("_Habitat.point.score.txt")%>%
+  purrr::map_df(~ga.read.files_txt(.))%>%
+  glimpse()
+
+# Save Habitat file ----
+setwd(staging.dir)
+write.csv(habitat,paste(study,"habitat.csv",sep="_"),row.names = FALSE)
+
