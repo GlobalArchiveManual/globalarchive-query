@@ -179,6 +179,8 @@ habitat.relief.fov<-relief.mean.and.sd%>%
   left_join(metadata)%>%
   glimpse()
 
+names(habitat.relief.fov)<-str_replace_all(names(habitat.relief.fov),c("biota."=""))
+
 write.csv(habitat.relief.fov, file=paste(study,"complete.habitat.csv",sep = "."), row.names=FALSE)
 write.fst(habitat.relief.fov,"complete.habitat.fst")
 
