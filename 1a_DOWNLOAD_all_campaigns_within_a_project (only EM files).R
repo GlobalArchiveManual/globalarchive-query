@@ -36,8 +36,8 @@ study<-"project.example"
 # This script uses one main folder ('working directory')
 # Three subfolders will be created within the 'working directory'. They are 'Downloads','Data to be checked' and 'Tidy data'
 # The 'Downloads' folder saves files downloaded from GlobalArchive.
-# The 'Data to be checked' folder is used to save the combined files (e.g. metadata, maxn or length) NOTE: These initial outputs have not gone through any check (e.g. checks against the life-history sheet)
-# **The only folder you will need to create is your working directory**
+# The 'Data to be checked' folder is used to save the combined files (e.g. metadata, maxn or length) NOTE: These initial outputs have not gone through any checks (e.g. checks against the life-history sheet)
+# **The only folder you will need to create outside of R is your working directory**
 
 ## Set your working directory ----
 working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory of current file - or type your own
@@ -48,9 +48,9 @@ download.dir<-paste(working.dir,"Downloads",sep="/")
 tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 
 ## Delete Downloads folder ----
-# It will delete any data sitting within your 'Downloads' folder 
+# This will delete any data sitting within your 'Downloads' folder 
 # DO NOT SAVE ANY OTHER FILES IN YOUR DOWNLOADS FILE
-# After running this line they will not be recoverable
+# After running this line they will not be recoverable!
 # This avoids doubling up GlobalArchive files, or including files from other Projects.
 setwd(working.dir)
 unlink(download.dir, recursive=TRUE)
@@ -63,7 +63,6 @@ dir.create(file.path(working.dir, "Tidy data"))
 ## Query from GlobalArchive----
 # Load default values from GlobalArchive ----
 source("https://raw.githubusercontent.com/UWAMEGFisheries/GlobalArchive/master/values.R")
-
 
 # An API token allows R to communicate with GlobalArchive
 
@@ -78,7 +77,6 @@ source("https://raw.githubusercontent.com/UWAMEGFisheries/GlobalArchive/master/v
 
 # Add your personal API user token ----
 API_USER_TOKEN <- "15b4edc7330c2efadff018bcc5fd684fd346fcaef2bf8a7e038e56c3"
-
 
 # Set up your query ----
 # A number of example queries are given in the read me on the 'globalarchive-query' github repository.
@@ -102,8 +100,8 @@ metadata <-ga.list.files("_Metadata.csv")%>% # list all files ending in "_Metada
   dplyr::select(project,campaignid,sample,latitude,longitude,date,time,location,status,site,depth,observer,successful.count,successful.length,comment)%>% # This line ONLY keep the 15 columns listed. Remove or turn this line off to keep all columns (Turn off with a # at the front).
   glimpse()
 
-unique(metadata$project) # check the number of projects in metadata
-unique(metadata$campaignid) # check the number of campaigns in metadata
+unique(metadata$project) # check the number of projects in metadata - in this example there should only be 1 (Pilbara Marine Conservation Partnership)
+unique(metadata$campaignid) # check the number of campaigns in metadata - in this example there should be 9 campaigns
 
 setwd(to.be.checked.dir)
 write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
@@ -114,7 +112,7 @@ maxn<-ga.create.maxn()%>%
   dplyr::filter(successful.count=="Yes")%>%
   dplyr::filter(maxn>0)
 
-# Save MaxN file ----
+## Save MaxN file ----
 setwd(to.be.checked.dir)
 write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 
