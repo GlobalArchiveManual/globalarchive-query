@@ -41,14 +41,12 @@ library(ggplot2)
 library(fst)
 
 # Study name---
-study<-"database.tables.example" ## change for your project
+study<-"project.example" ## change for your project
 
 ## Set your working directory ----
 working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory of current file - or type your own
 
-## Save these directory names to use later----
-staging.dir<-paste(working.dir,"Staging",sep="/") 
-download.dir<-paste(working.dir,"Downloads",sep="/")
+## Save these directory names to use later---- 
 tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 plots.dir=paste(working.dir,"Plots",sep="/")
 error.dir=paste(working.dir,"Errors to check",sep="/")
@@ -62,7 +60,7 @@ metadata<-read_csv(file=paste(study,"checked.metadata.csv",sep = "."),na = c("",
   dplyr::mutate(id=paste(campaignid,sample,sep="."))%>%
   glimpse()
 
-# Make complete.maxn: fill in 0 and join in factors----
+# Make complete.maxn: fill in 0s and join in factors----
 dat<-read_csv(file=paste(study,"checked.maxn.csv",sep = "."),na = c("", " "))%>%
   dplyr::mutate(id=paste(campaignid,sample,sep="."))%>%
   dplyr::select(c(id,campaignid,sample,family,genus,species,maxn))%>%
@@ -88,10 +86,10 @@ maxn.families<-read_csv(file=paste(study,"checked.maxn.csv",sep = "."),na = c(""
 complete.maxn<-dat%>%
   gather(key=scientific, value = maxn,-sample)%>%
   inner_join(maxn.families,by=c("scientific"))%>%
-  inner_join(metadata)%>% #Joining metadata will use a lot of memory - # out if you need too
+  inner_join(metadata)%>% # Joining metadata will use a lot of memory - # out if you need too
   glimpse()
 
-# Make complete.length.number.mass: fill in 0 and join in factors----
+# Make complete.length.number.mass: fill in 0s and join in factors----
 length.families<-read_csv(file=paste(study,"checked.length.csv",sep = "."),na = c("", " "))%>%
   filter(!(family=="Unknown"))%>%
   select(family,genus,species)%>%
@@ -167,7 +165,7 @@ family.missing.lw <- complete.length.number%>%
   anti_join(filter(master,!is.na(a)), by="family")%>%
   glimpse()
 
-#3. Fill length data with relevant a and b and if blank use family?---
+#3. Fill length data with relevant a and b and if blank use family---
 length.species.ab<-master%>% #done this way around to avoid duplicating Family coloum
   select(-family)%>%
   inner_join(complete.length.number,., by=c("genus","species")) # only keeps row if has a and b
@@ -224,7 +222,7 @@ ggplot(data=complete.length.number.mass, aes(length.cm,mass.g)) +
 ggsave(file=paste(study,"check.length.cm.vs.mass.g.png",sep = "."))
 
 
-#Check the mass estimates across species - in kg's----
+# Check the mass estimates across species - in kg's----
 check.mass<- complete.length.number.mass %>%
   dplyr::group_by(family,genus,species)%>%
   filter(mass.g>0)%>%
@@ -240,6 +238,7 @@ check.mass<- complete.length.number.mass %>%
   mutate(mean.length=round(mean.length,digits=2))%>%
   arrange(-mean.kg)%>%
   glimpse()
+
 setwd(error.dir)
 write.csv(check.mass,file=paste(study,"check.mass.csv",sep = "_"), row.names=FALSE)
 
