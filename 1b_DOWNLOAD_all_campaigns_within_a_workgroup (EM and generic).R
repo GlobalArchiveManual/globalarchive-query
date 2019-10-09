@@ -36,11 +36,11 @@ study<-"project.example"
 ## Folder Structure ----
 # This script uses one main folder ('working directory')
 
-# Three subfolders will be created within the 'working directory'. They are 'Downloads','Staging' and 'Tidy data'
+# Three subfolders will be created within the 'working directory'. They are 'Downloads','Data to be checked' and 'Tidy data'
 
 # The 'Downloads' folder saves files downloaded from GlobalArchive.
 
-# The 'Staging' folder is used to save the combined files (e.g. metadata, maxn or length) NOTE: These initial outputs have not gone through any check (e.g. checks against the life-history sheet)
+# The 'Data to be checked' folder is used to save the combined files (e.g. metadata, maxn or length) NOTE: These initial outputs have not gone through any check (e.g. checks against the life-history sheet)
 
 # **The only folder you will need to create is your working directory**
 
@@ -48,7 +48,7 @@ study<-"project.example"
 working.dir<-dirname(rstudioapi::getActiveDocumentContext()$path) # to directory of current file - or type your own
 
 ## Save these directory names to use later----
-staging.dir<-paste(working.dir,"Staging",sep="/") 
+to.be.checked.dir<-paste(working.dir,"Data to be checked",sep="/") 
 download.dir<-paste(working.dir,"Downloads",sep="/")
 tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 
@@ -60,9 +60,9 @@ tidy.dir<-paste(working.dir,"Tidy data",sep="/")
 setwd(working.dir)
 unlink(download.dir, recursive=TRUE)
 
-## Create Downloads, Staging and Tidy data folders ----
+## Create Downloads, Data to be checked and Tidy data folders ----
 dir.create(file.path(working.dir, "Downloads"))
-dir.create(file.path(working.dir, "Staging"))
+dir.create(file.path(working.dir, "Data to be checked"))
 dir.create(file.path(working.dir, "Tidy data"))
 
 ## Query from GlobalArchive----
@@ -107,7 +107,7 @@ metadata <-ga.list.files("_Metadata.csv")%>% # list all files ending in "_Metada
 unique(metadata$project) # check the number of projects in metadata
 unique(metadata$campaignid) # check the number of campaigns in metadata
 
-setwd(staging.dir)
+setwd(to.be.checked.dir)
 write.csv(metadata,paste(study,"metadata.csv",sep="_"),row.names = FALSE)
 
 ## Combine Points and Count files into maxn ----
@@ -117,7 +117,7 @@ maxn<-ga.create.maxn()%>%
   dplyr::filter(maxn>0)
 
 # Save MaxN file ----
-setwd(staging.dir)
+setwd(to.be.checked.dir)
 write.csv(maxn,paste(study,"maxn.csv",sep="_"),row.names = FALSE)
 
 ## Combine Length, Lengths and 3D point files into length3dpoints----
@@ -128,5 +128,5 @@ length3dpoints<-ga.create.length3dpoints()%>%
   glimpse()
 
 ## Save length files ----
-setwd(staging.dir)
+setwd(to.be.checked.dir)
 write.csv(length3dpoints,paste(study,"length3dpoints.csv",sep="_"),row.names = FALSE)
