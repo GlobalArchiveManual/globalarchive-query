@@ -8,6 +8,7 @@
 /EM Export
 /Errors to check
 /Staging
+/Data to be checked
 .DS_Store
 .Rproj.user/shared/notebooks/paths
 .httr-oauth
